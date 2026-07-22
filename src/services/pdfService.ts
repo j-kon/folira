@@ -1,5 +1,6 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import workerRawCode from 'pdfjs-dist/build/pdf.worker.min.mjs?raw';
+import type { TocOutlineItem, SearchMatch } from '@/types/search';
 
 // Create an inline Blob URL for PDF.js worker so offline dev/prod loading requires zero network calls
 const workerBlob = new Blob([workerRawCode], { type: 'text/javascript' });
@@ -46,6 +47,95 @@ export const pdfService = {
     } catch {
       return undefined;
     }
+  },
+
+  async getOutline(pdfDoc: pdfjsLib.PDFDocumentProxy): Promise<TocOutlineItem[]> {
+    try {
+      const rawOutline = await pdfDoc.getOutline();
+      if (!rawOutline || !Array.isArray(rawOutline)) return [];
+
+      const parseNode = async (nodes: any[]): Promise<TocOutlineItem[]> => {
+        const result: TocOutlineItem[] = [];
+        for (let i = 0; i < nodes.length; i++) {
+          const node = nodes[i];
+          let pageNumber = 1;
+
+          if (node.dest) {
+            try {
+              let explicitDest = node.dest;
+              if (typeof explicitDest === 'string') {
+                explicitDest = await pdfDoc.getDestination(explicitDest);
+              }
+              if (Array.isArray(explicitDest) && explicitDest[0]) {
+                const pageIndex = await pdfDoc.getPageIndex(explicitDest[0]);
+                pageNumber = pageIndex + 1;
+              }
+            } catch (err) {
+              console.warn('Could not resolve destination page index:', err);
+            }
+          }
+
+          const children = node.items && node.items.length > 0 ? await parseNode(node.items) : undefined;
+
+          result.push({
+            id: `outline-${i}-${Math.random().toString(36).substring(2, 7)}`,
+            title: node.title || 'Untitled Section',
+            pageNumber,
+            dest: node.dest,
+            items: children,
+          });
+        }
+        return result;
+      };
+
+      return await parseNode(rawOutline);
+    } catch (err) {
+      console.warn('Failed to parse PDF document outline:', err);
+      return [];
+    }
+  },
+
+  async searchDocumentText(pdfDoc: pdfjsLib.PDFDocumentProxy, query: string): Promise<SearchMatch[]> {
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) return [];
+
+    const matches: SearchMatch[] = [];
+    let matchIdCount = 0;
+
+    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+      try {
+        const page = await pdfDoc.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        const fullPageText = textContent.items.map((item: any) => item.str).join(' ');
+        const lowerPageText = fullPageText.toLowerCase();
+
+        let startIndex = 0;
+        let pageMatchCount = 0;
+
+        while ((startIndex = lowerPageText.indexOf(trimmed, startIndex)) !== -1) {
+          matchIdCount++;
+          pageMatchCount++;
+
+          const snippetStart = Math.max(0, startIndex - 25);
+          const snippetEnd = Math.min(fullPageText.length, startIndex + trimmed.length + 25);
+          const snippet = fullPageText.slice(snippetStart, snippetEnd);
+
+          matches.push({
+            id: `match-${matchIdCount}`,
+            pageNumber: pageNum,
+            textSnippet: snippet,
+            matchIndex: matchIdCount,
+            totalMatchesOnPage: pageMatchCount,
+          });
+
+          startIndex += trimmed.length;
+        }
+      } catch (err) {
+        console.warn(`Text search error on page ${pageNum}:`, err);
+      }
+    }
+
+    return matches;
   },
 
   async renderPageToCanvas(
