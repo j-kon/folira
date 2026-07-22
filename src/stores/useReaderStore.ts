@@ -50,7 +50,7 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
   totalPages: 1,
   zoomLevel: 1.0,
   zoomMode: 'fit-width',
-  backgroundTheme: 'light',
+  backgroundTheme: (localStorage.getItem('folira_reader_theme') as ReaderBackgroundTheme) || 'paper',
   isSidebarOpen: false,
   activeSidebarTab: 'info',
   isFullscreen: false,
@@ -155,7 +155,10 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
     set({ zoomLevel: newZoom, zoomMode: newZoom });
   },
 
-  setBackgroundTheme: (backgroundTheme) => set({ backgroundTheme }),
+  setBackgroundTheme: (backgroundTheme) => {
+    localStorage.setItem('folira_reader_theme', backgroundTheme);
+    set({ backgroundTheme });
+  },
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
   setActiveSidebarTab: (activeSidebarTab) => set({ activeSidebarTab, isSidebarOpen: true }),
   setIsFullscreen: (isFullscreen) => set({ isFullscreen }),
