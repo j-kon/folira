@@ -14,16 +14,19 @@ test.describe('Folira Search & TOC Outline Flow', () => {
     await page.locator('h3', { hasText: 'sample' }).click();
     await expect(page.locator('canvas')).toBeVisible();
 
+    // Toggle Search Bar first
+    await page.locator('button[aria-label="Search document"]').click();
+    await expect(page.locator('input[placeholder*="Search text"]')).toBeVisible();
+
+    // Close Search Bar
+    await page.locator('button[aria-label="Close Search"]').click();
+
     // Toggle Sidebar
     await page.locator('button[aria-label="Toggle Sidebar"]').click();
     await expect(page.locator('aside')).toBeVisible();
 
     // Click TOC Tab
     await page.locator('button[title="Table of Contents"]').click();
-    await expect(page.locator('text=Table of Contents')).toBeVisible();
-
-    // Toggle Search Bar
-    await page.locator('button[aria-label="Search document"]').click();
-    await expect(page.locator('input[placeholder*="Search text"]')).toBeVisible();
+    await expect(page.locator('h3', { hasText: 'Table of Contents' })).toBeVisible();
   });
 });
