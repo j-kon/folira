@@ -6,8 +6,6 @@ import {
   ChevronRight,
   ZoomIn,
   ZoomOut,
-  Maximize2,
-  Minimize2,
   Bookmark,
   Sidebar,
   Sun,
@@ -16,9 +14,11 @@ import {
   Maximize,
   CheckCircle2,
   Volume2,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { useReaderStore } from '@/stores/useReaderStore';
-import { useNotificationStore } from '@/stores/useNotificationStore';
+import { useSearchStore } from '@/stores/useSearchStore';
 import { IconButton } from '../common/IconButton';
 import { Badge } from '../common/Badge';
 
@@ -45,12 +45,24 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({ isVisible = true, 
     setBackgroundTheme,
     isSidebarOpen,
     toggleSidebar,
-    isFullscreen,
-    toggleFullscreen,
     addBookmarkForCurrentPage,
     bookmarks,
     lastSavedAt,
+    pdfDocProxy,
   } = useReaderStore();
+
+  const {
+    query,
+    matches,
+    activeMatchIndex,
+    isSearching,
+    isSearchOpen,
+    toggleSearch,
+    closeSearch,
+    performSearch,
+    nextMatch,
+    prevMatch,
+  } = useSearchStore();
 
   const [pageInput, setPageInput] = useState<string>(String(currentPage));
 
@@ -70,8 +82,11 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({ isVisible = true, 
     }
   };
 
-  const handleSearchPlaceholder = () => {
-    useNotificationStore.getState().showToast('Text search inside PDF is coming soon!', 'info');
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      performSearch(query, pdfDocProxy);
+    }
   };
 
   return (
@@ -94,49 +109,100 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({ isVisible = true, 
             title={doc?.name || 'Document Reader'}
             className="font-editorial text-sm font-semibold text-[#252A27] dark:text-[#F8F5EE] truncate max-w-[140px] sm:max-w-xs md:max-w-md"
           >
-            {doc?.name || 'Loading document...'}
+            {doc?.name || 'Loading Document...'}
           </h2>
           {lastSavedAt && (
-            <Badge variant="forest" className="hidden lg:inline-flex text-[10px] py-0 px-2 shrink-0">
-              <CheckCircle2 className="w-3 h-3" />
+            <Badge variant="forest" className="hidden sm:inline-flex text-[10px] py-0.5 px-2">
+              <CheckCircle2 className="w-3 h-3 mr-1" />
               Saved
             </Badge>
           )}
         </div>
       </div>
 
-      {/* Center: Page Navigation */}
-      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-        <IconButton
-          aria-label="Previous Page"
-          icon={<ChevronLeft className="w-5 h-5" />}
-          variant="ghost"
-          size="sm"
-          disabled={currentPage <= 1}
-          onClick={prevPage}
-        />
-
-        <form onSubmit={handlePageSubmit} className="flex items-center gap-1.5 text-xs font-medium">
+      {/* In-Document Search Bar Overlay when open */}
+      {isSearchOpen ? (
+        <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 bg-[#FAF8F5] dark:bg-[#151A17] p-1.5 px-3 rounded-xl border border-[#2F6B4F]/40 shadow-md">
+          <Search className="w-4 h-4 text-[#2F6B4F] dark:text-[#3D8B67] shrink-0" />
           <input
             type="text"
-            value={pageInput}
-            onChange={(e) => setPageInput(e.target.value)}
-            onBlur={handlePageSubmit}
-            aria-label="Current Page Number"
-            className="w-10 text-center py-1 bg-[#F8F5EE] dark:bg-[#151A17] border border-[#E8E5DD] dark:border-[#2D3630] rounded-md font-semibold text-[#252A27] dark:text-[#F8F5EE] focus:outline-none focus:ring-1 focus:ring-[#2F6B4F]"
+            value={query}
+            autoFocus
+            onChange={(e) => performSearch(e.target.value, pdfDocProxy)}
+            placeholder="Search text in document..."
+            className="w-36 sm:w-60 bg-transparent text-xs text-[#252A27] dark:text-[#F8F5EE] focus:outline-none"
           />
-          <span className="text-[#7A857F]">/ {totalPages}</span>
-        </form>
 
-        <IconButton
-          aria-label="Next Page"
-          icon={<ChevronRight className="w-5 h-5" />}
-          variant="ghost"
-          size="sm"
-          disabled={currentPage >= totalPages}
-          onClick={nextPage}
-        />
-      </div>
+          {isSearching ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#2F6B4F]" />
+          ) : matches.length > 0 ? (
+            <span className="text-[11px] font-semibold text-[#2F6B4F] dark:text-[#3D8B67] whitespace-nowrap">
+              {activeMatchIndex + 1} of {matches.length}
+            </span>
+          ) : query.trim() ? (
+            <span className="text-[11px] text-[#7A857F]">0 matches</span>
+          ) : null}
+
+          <div className="flex items-center gap-0.5 pl-1 border-l border-[#E8E5DD] dark:border-[#2D3630]">
+            <IconButton
+              aria-label="Previous Match"
+              icon={<ChevronLeft className="w-3.5 h-3.5" />}
+              variant="ghost"
+              size="sm"
+              disabled={matches.length === 0}
+              onClick={prevMatch}
+            />
+            <IconButton
+              aria-label="Next Match"
+              icon={<ChevronRight className="w-3.5 h-3.5" />}
+              variant="ghost"
+              size="sm"
+              disabled={matches.length === 0}
+              onClick={nextMatch}
+            />
+            <IconButton
+              aria-label="Close Search"
+              icon={<X className="w-3.5 h-3.5" />}
+              variant="ghost"
+              size="sm"
+              onClick={closeSearch}
+            />
+          </div>
+        </form>
+      ) : (
+        /* Center: Page Navigation */
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <IconButton
+            aria-label="Previous Page"
+            icon={<ChevronLeft className="w-5 h-5" />}
+            variant="ghost"
+            size="sm"
+            disabled={currentPage <= 1}
+            onClick={prevPage}
+          />
+
+          <form onSubmit={handlePageSubmit} className="flex items-center gap-1.5 text-xs font-medium">
+            <input
+              type="text"
+              value={pageInput}
+              onChange={(e) => setPageInput(e.target.value)}
+              onBlur={handlePageSubmit}
+              aria-label="Current Page Number"
+              className="w-10 text-center py-1 bg-[#F8F5EE] dark:bg-[#151A17] border border-[#E8E5DD] dark:border-[#2D3630] rounded-md font-semibold text-[#252A27] dark:text-[#F8F5EE] focus:outline-none focus:ring-1 focus:ring-[#2F6B4F]"
+            />
+            <span className="text-[#7A857F]">/ {totalPages}</span>
+          </form>
+
+          <IconButton
+            aria-label="Next Page"
+            icon={<ChevronRight className="w-5 h-5" />}
+            variant="ghost"
+            size="sm"
+            disabled={currentPage >= totalPages}
+            onClick={nextPage}
+          />
+        </div>
+      )}
 
       {/* Right: Controls & Sidebar */}
       <div className="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -174,11 +240,12 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({ isVisible = true, 
           />
         )}
 
-        {/* Search Placeholder button */}
+        {/* In-Document Search Toggle Button */}
         <IconButton
           aria-label="Search document"
           icon={<Search className="w-4 h-4" />}
-          onClick={handleSearchPlaceholder}
+          variant={isSearchOpen ? 'secondary' : 'ghost'}
+          onClick={toggleSearch}
         />
 
         {/* Reading Background Theme Toggle */}
@@ -199,11 +266,11 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({ isVisible = true, 
             title="Sepia theme"
             className={`p-1.5 rounded-lg text-xs font-medium transition-colors ${
               backgroundTheme === 'sepia'
-                ? 'bg-[#F2E4CB] text-[#3E2723] font-semibold border border-[#C89545]/40'
+                ? 'bg-[#F2E4CB] text-[#3E2723] font-semibold border border-[#D7CCC8]'
                 : 'text-[#7A857F] hover:text-[#252A27]'
             }`}
           >
-            <span className="w-4 h-4 font-bold text-xs flex items-center justify-center">S</span>
+            <span className="w-4 h-4 rounded-full bg-[#EFEBE9] border border-[#D7CCC8] block" />
           </button>
           <button
             onClick={() => setBackgroundTheme('night')}
@@ -218,17 +285,10 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({ isVisible = true, 
           </button>
         </div>
 
-        {/* Fullscreen toggle */}
-        <IconButton
-          aria-label="Toggle Fullscreen"
-          icon={isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          onClick={toggleFullscreen}
-        />
-
-        {/* Sidebar toggle */}
+        {/* Toggle Sidebar */}
         <IconButton
           aria-label="Toggle Sidebar"
-          icon={<Sidebar className="w-4 h-4" />}
+          icon={<Sidebar className="w-5 h-5" />}
           variant={isSidebarOpen ? 'secondary' : 'ghost'}
           onClick={toggleSidebar}
         />
