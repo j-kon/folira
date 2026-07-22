@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type * as pdfjsLib from 'pdfjs-dist';
 import type { DocumentRecord } from '@/types/document';
 import type { BookmarkRecord } from '@/types/bookmark';
-import type { ReaderBackgroundTheme, ZoomLevelOption } from '@/types/reader';
+import type { ReaderBackgroundTheme, ZoomLevelOption, SidebarTab } from '@/types/reader';
 import { documentStorage } from '@/services/documentStorage';
 import { pdfService } from '@/services/pdfService';
 import { useNotificationStore } from './useNotificationStore';
@@ -18,7 +18,7 @@ interface ReaderState {
   zoomMode: ZoomLevelOption;
   backgroundTheme: ReaderBackgroundTheme;
   isSidebarOpen: boolean;
-  activeSidebarTab: 'info' | 'thumbnails' | 'bookmarks' | 'toc' | 'annotations';
+  activeSidebarTab: SidebarTab;
   isFullscreen: boolean;
   bookmarks: BookmarkRecord[];
   isLoading: boolean;
@@ -34,7 +34,7 @@ interface ReaderState {
   zoomOut: () => void;
   setBackgroundTheme: (theme: ReaderBackgroundTheme) => void;
   toggleSidebar: () => void;
-  setActiveSidebarTab: (tab: 'info' | 'thumbnails' | 'bookmarks' | 'toc') => void;
+  setActiveSidebarTab: (tab: SidebarTab) => void;
   setIsFullscreen: (fullscreen: boolean) => void;
   toggleFullscreen: () => void;
   addBookmarkForCurrentPage: (customLabel?: string) => Promise<void>;
@@ -175,7 +175,7 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
 
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
 
-  setActiveSidebarTab: (tab: 'info' | 'thumbnails' | 'bookmarks' | 'toc') => set({ activeSidebarTab: tab }),
+  setActiveSidebarTab: (tab: SidebarTab) => set({ activeSidebarTab: tab }),
 
   setIsFullscreen: (fullscreen: boolean) => set({ isFullscreen: fullscreen }),
 

@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { db } from '@/services/database';
 import type { AnnotationRecord, AnnotationColor } from '@/types/document';
-import { v4 as uuidv4 } from 'uuid';
 
 interface AnnotationState {
   annotations: AnnotationRecord[];
@@ -39,7 +38,7 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
   addAnnotation: async ({ documentId, pageNumber, selectedText, color, note }) => {
     const now = Date.now();
     const record: AnnotationRecord = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       documentId,
       pageNumber,
       selectedText: selectedText.trim(),

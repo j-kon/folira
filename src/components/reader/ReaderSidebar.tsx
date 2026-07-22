@@ -9,7 +9,6 @@ import {
   BookOpen,
   ChevronRight,
   Highlighter,
-  Download,
   FileText,
   FileCode,
 } from 'lucide-react';
