@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, ArrowRight, Clock } from 'lucide-react';
+import { BookOpen, ArrowRight, Clock, Volume2 } from 'lucide-react';
 import type { DocumentRecord } from '@/types/document';
 import { ProgressBar } from '../common/ProgressBar';
 import { Button } from '../common/Button';
 import { formatTimeAgo, formatFileSize } from '@/utils/formatters';
+import { useReadAloudStore } from '@/stores/useReadAloudStore';
 
 export interface ContinueReadingCardProps {
   document: DocumentRecord;
@@ -14,6 +15,11 @@ export const ContinueReadingCard: React.FC<ContinueReadingCardProps> = ({ docume
   const navigate = useNavigate();
 
   const handleOpen = () => {
+    navigate(`/reader/${document.id}`);
+  };
+
+  const handleListen = () => {
+    useReadAloudStore.getState().startListening(document.id, document.currentPage || 1);
     navigate(`/reader/${document.id}`);
   };
 
@@ -84,14 +90,24 @@ export const ContinueReadingCard: React.FC<ContinueReadingCardProps> = ({ docume
                   ? 'Completed'
                   : `${document.totalPages - document.currentPage} pages left`}
               </span>
-              <Button
-                variant="primary"
-                size="md"
-                rightIcon={<ArrowRight className="w-4 h-4" />}
-                onClick={handleOpen}
-              >
-                Continue Reading
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="md"
+                  leftIcon={<Volume2 className="w-4 h-4 text-[#2F6B4F] dark:text-[#3D8B67]" />}
+                  onClick={handleListen}
+                >
+                  Listen
+                </Button>
+                <Button
+                  variant="primary"
+                  size="md"
+                  rightIcon={<ArrowRight className="w-4 h-4" />}
+                  onClick={handleOpen}
+                >
+                  Continue Reading
+                </Button>
+              </div>
             </div>
           </div>
         </div>
