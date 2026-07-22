@@ -1,10 +1,12 @@
 import React, { useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BookOpen, Search, Plus, X, Settings } from 'lucide-react';
+import { Plus, Settings } from 'lucide-react';
 import { useDocumentStore } from '@/stores/useDocumentStore';
 import { ThemeToggle } from './ThemeToggle';
 import { OfflineBadge } from '../common/OfflineBadge';
 import { Button } from '../common/Button';
+import { SearchInput } from '../common/SearchInput';
+import { IconButton } from '../common/IconButton';
 import { DuplicateModal } from '../library/DuplicateModal';
 
 export const Header: React.FC = () => {
@@ -37,40 +39,28 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-[var(--color-warm-bg)]/80 dark:bg-[var(--color-dark-bg)]/80 backdrop-blur-md border-b border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] transition-colors">
+    <header className="sticky top-0 z-30 w-full bg-[#FAF8F5]/90 dark:bg-[#151A17]/90 backdrop-blur-md border-b border-[#E8E5DD] dark:border-[#2D3630] transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand / Logo */}
         <Link
           to="/"
-          className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-emerald-accent)] rounded-lg px-1 shrink-0"
+          className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-[#252A27] dark:text-[#F8F5EE] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6B4F] rounded-lg px-1 shrink-0 group"
         >
-          <div className="w-8 h-8 rounded-xl bg-[var(--color-emerald-accent)] text-white flex items-center justify-center shadow-xs">
-            <BookOpen className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-xl overflow-hidden drop-shadow-xs transition-transform group-hover:scale-105">
+            <img src="/favicon.svg" alt="Folira Logo" className="w-full h-full object-contain" />
           </div>
-          <span>Folira</span>
+          <span className="font-editorial text-2xl font-bold tracking-tight text-[#252A27] dark:text-[#F8F5EE]">
+            Folira
+          </span>
         </Link>
 
         {/* Search Field */}
         <div className="flex-1 max-w-md mx-2 sm:mx-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search library documents..."
-              className="w-full pl-9 pr-9 py-1.5 text-sm bg-[var(--color-warm-card)] dark:bg-[var(--color-dark-card)] border border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] rounded-xl text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--color-emerald-accent)] transition-all"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                aria-label="Clear search"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
+          <SearchInput
+            value={searchQuery}
+            onSearchChange={setSearchQuery}
+            placeholder="Search documents by title..."
+          />
         </div>
 
         {/* Right side actions */}
@@ -95,13 +85,13 @@ export const Header: React.FC = () => {
             <span className="hidden sm:inline">Import</span> Document
           </Button>
 
-          <Link
-            to="/settings"
-            title="Settings & Storage"
-            aria-label="Settings and Storage"
-            className="p-2 rounded-xl text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] hover:bg-[var(--color-warm-subtle)] dark:hover:bg-[var(--color-dark-subtle)] hover:text-[var(--color-charcoal)] dark:hover:text-[var(--color-dark-text)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-emerald-accent)]"
-          >
-            <Settings className="w-5 h-5" />
+          <Link to="/settings" tabIndex={-1}>
+            <IconButton
+              aria-label="Settings and Storage"
+              icon={<Settings className="w-5 h-5" />}
+              variant="ghost"
+              size="sm"
+            />
           </Link>
 
           <ThemeToggle />
