@@ -1,0 +1,53 @@
+:root {
+  /* Brand Colors */
+  --color-folira-forest: #2F6B4F;
+  --color-deep-forest: #204B38;
+  --color-soft-leaf: #DDEBE2;
+
+  /* Neutrals */
+  --color-paper: #F8F5EE;
+  --color-warm-white: #FFFDF8;
+  --color-soft-stone: #E8E5DD;
+  --color-graphite: #252A27;
+  --color-deep-ink: #151A17;
+
+  /* Supporting Accent Gold */
+  --color-reading-gold: #C89545;
+  --color-soft-gold: #F2E4CB;
+
+  /* Semantic Colors */
+  --color-success: #2E7D32;
+  --color-success-bg: #E8F5E9;
+  --color-warning: #ED6C02;
+  --color-warning-bg: #FFF3E0;
+  --color-error: #D32F2F;
+  --color-error-bg: #FFEBEE;
+  --color-info: #0288D1;
+  --color-info-bg: #E1F5FE;
+
+  /* Border Radius Scale */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Elevation Shadows */
+  --shadow-sm: 0 1px 3px rgba(37, 42, 39, 0.05), 0 1px 2px rgba(37, 42, 39, 0.08);
+  --shadow-md: 0 4px 12px rgba(37, 42, 39, 0.08), 0 2px 4px rgba(37, 42, 39, 0.04);
+  --shadow-lg: 0 12px 32px rgba(37, 42, 39, 0.12), 0 4px 8px rgba(37, 42, 39, 0.06);
+
+  /* Animation Durations */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-Index Layers */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-toast: 1060;
+  --z-tooltip: 1070;
+}
