@@ -88,10 +88,12 @@ export const PdfCanvas: React.FC<PdfCanvasProps> = ({ pdfDoc, pageNumber }) => {
     };
   }, [pdfDoc, pageNumber, zoomLevel, zoomMode]);
 
-  const bgStyles = {
+  const bgStyles: Record<typeof backgroundTheme, string> = {
     light: 'bg-white shadow-md border-gray-200/80',
+    paper: 'bg-[#F8F5EE] shadow-md border-[#E8E5DD]',
     sepia: 'bg-[#FAF4E8] shadow-md border-[#E6DCB8]',
     dark: 'bg-[#1C1E24] text-white shadow-xl border-gray-800',
+    night: 'bg-[#151A17] text-white shadow-xl border-[#2D3630]',
   };
 
   return (

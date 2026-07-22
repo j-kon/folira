@@ -33,3 +33,7 @@ export function formatDate(timestamp: number | null): string {
     year: new Date(timestamp).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined,
   });
 }
+
+export function formatTimeAgo(timestamp: number | null): string {
+  return formatDate(timestamp);
+}

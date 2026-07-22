@@ -15,7 +15,6 @@ import {
   Palette,
   HardDrive,
   ShieldCheck,
-  Info,
   Download,
   Upload,
   Trash2,
@@ -23,8 +22,6 @@ import {
   Moon,
   Grid,
   List,
-  Sparkles,
-  ExternalLink,
 } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {

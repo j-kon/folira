@@ -16,18 +16,18 @@ export const WelcomeScreen: React.FC = () => {
 
       {/* Brand Wordmark & Tagline */}
       <div className="flex flex-col items-center gap-1.5 mb-4">
-        <span className="font-editorial text-4xl sm:text-5xl font-bold tracking-tight text-[#252A27] dark:text-[#F8F5EE]">
+        <h1 className="font-editorial text-4xl sm:text-5xl font-bold tracking-tight text-[#252A27] dark:text-[#F8F5EE]">
           Folira
-        </span>
+        </h1>
         <Badge variant="forest" className="text-xs uppercase tracking-widest px-3 py-1 font-semibold">
           Read anything. Even offline.
         </Badge>
       </div>
 
       {/* Main Editorial Headline */}
-      <h1 className="mt-2 font-editorial text-2xl sm:text-3xl font-semibold text-[#2F6B4F] dark:text-[#3D8B67] max-w-xl">
+      <h2 className="mt-2 font-editorial text-2xl sm:text-3xl font-semibold text-[#2F6B4F] dark:text-[#3D8B67] max-w-xl">
         Your reading space, wherever you are.
-      </h1>
+      </h2>
 
       {/* Product Explanation */}
       <p className="mt-4 text-sm sm:text-base text-[#525B56] dark:text-[#C0C8C3] max-w-xl leading-relaxed">

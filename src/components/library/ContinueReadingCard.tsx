@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, ArrowRight, Clock } from 'lucide-react';
-import { DocumentRecord } from '@/types/document';
+import type { DocumentRecord } from '@/types/document';
 import { ProgressBar } from '../common/ProgressBar';
 import { Button } from '../common/Button';
 import { formatTimeAgo, formatFileSize } from '@/utils/formatters';

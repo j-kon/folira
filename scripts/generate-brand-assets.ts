@@ -16,7 +16,7 @@ const svgBuffer = fs.readFileSync(symbolSvgPath);
 fs.writeFileSync(path.join(publicDir, 'favicon.svg'), svgBuffer);
 fs.writeFileSync(path.join(publicDir, 'folira-logo.svg'), svgBuffer);
 
-function renderPng(svg: Buffer, width: number, height: number): Buffer {
+function renderPng(svg: Buffer, width: number, _height?: number): Buffer {
   const resvg = new Resvg(svg, {
     fitTo: {
       mode: 'width',

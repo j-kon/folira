@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, X } from 'lucide-react';
-import { Input, InputProps } from './Input';
+import { Input, type InputProps } from './Input';
 
 export interface SearchInputProps extends Omit<InputProps, 'onChange'> {
   value: string;

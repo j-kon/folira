@@ -1,4 +1,4 @@
-export type ReaderBackgroundTheme = 'light' | 'dark' | 'sepia';
+export type ReaderBackgroundTheme = 'light' | 'dark' | 'sepia' | 'paper' | 'night';
 
 export type ZoomLevelOption = 'fit-width' | 'fit-page' | number;
 

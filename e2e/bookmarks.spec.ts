@@ -3,20 +3,20 @@ import path from 'path';
 
 test.describe('Folira Bookmark Flow', () => {
   test('should create, persist, and navigate using bookmarks', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('input[type="file"]', { state: 'attached' });
 
-    const fileInput = page.locator('input[type="file"]').first();
     const pdfPath = path.resolve('./e2e/fixtures/sample.pdf');
-    await fileInput.setInputFiles(pdfPath);
+    await page.setInputFiles('input[type="file"]', pdfPath);
 
     // Open Reader
     await page.locator('h3', { hasText: 'sample' }).click();
 
-    // Click Bookmark button
-    await page.locator('button[aria-label="Bookmark page"]').click();
+    // Click Bookmark button (first one in desktop/mobile toolbar)
+    await page.locator('button[aria-label="Bookmark page"]').first().click();
 
-    // Open Sidebar
-    await page.locator('button[aria-label="Toggle Sidebar"]').click();
+    // Open Sidebar (first one in desktop/mobile toolbar)
+    await page.locator('button[aria-label="Toggle Sidebar"]').first().click();
 
     // Click Bookmarks Tab
     await page.locator('button[title="Bookmarks"]').click();
@@ -26,7 +26,7 @@ test.describe('Folira Bookmark Flow', () => {
     await page.reload();
 
     // Verify Reader reopens and bookmark persists
-    await page.locator('button[aria-label="Toggle Sidebar"]').click();
+    await page.locator('button[aria-label="Toggle Sidebar"]').first().click();
     await page.locator('button[title="Bookmarks"]').click();
     await expect(page.locator('text=Bookmarks (1)')).toBeVisible();
   });
