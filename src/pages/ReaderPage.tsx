@@ -1,13 +1,17 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useReaderStore } from '@/stores/useReaderStore';
+import { useReadAloudStore } from '@/stores/useReadAloudStore';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { ReaderToolbar } from '@/components/reader/ReaderToolbar';
 import { PdfCanvas } from '@/components/reader/PdfCanvas';
 import { ReaderSidebar } from '@/components/reader/ReaderSidebar';
+import { SpokenTextHighlight } from '@/components/reader/SpokenTextHighlight';
+import { AudioPlayer } from '@/components/reader/AudioPlayer';
+import { MiniAudioPlayer } from '@/components/reader/MiniAudioPlayer';
 import { Button } from '@/components/common/Button';
 import { ToastContainer } from '@/components/common/ToastContainer';
-import { Loader2, AlertCircle, ArrowLeft, ChevronLeft, ChevronRight, Bookmark, Sun, Moon } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, ChevronLeft, ChevronRight, Bookmark, Sun, Moon, Volume2 } from 'lucide-react';
 
 export const ReaderPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,12 +30,113 @@ export const ReaderPage: React.FC = () => {
     addBookmarkForCurrentPage,
     backgroundTheme,
     setBackgroundTheme,
+    document: docRecord,
   } = useReaderStore();
 
+  const {
+    status: readAloudStatus,
+    startListening,
+    play,
+    pause,
+    resume,
+    stop,
+    nextSentence,
+    prevSentence,
+    rate,
+    setRate,
+    volume,
+    setVolume,
+  } = useReadAloudStore();
+
   const [isToolbarVisible, setIsToolbarVisible] = useState(true);
+  const [isAudioPlayerOpen, setIsAudioPlayerOpen] = useState(false);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useKeyboardShortcuts(true);
+
+  // Read Aloud Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      const isInput =
+        activeEl &&
+        (activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          activeEl.tagName === 'SELECT' ||
+          activeEl.isContentEditable);
+
+      if (isInput) return;
+
+      // Space -> Play / Pause (if read aloud active)
+      if (e.code === 'Space' && (readAloudStatus === 'playing' || readAloudStatus === 'paused')) {
+        e.preventDefault();
+        if (readAloudStatus === 'playing') pause();
+        else resume();
+      }
+
+      // Shift + Space -> Stop
+      if (e.code === 'Space' && e.shiftKey) {
+        e.preventDefault();
+        stop();
+      }
+
+      // Alt + Left / Right -> Prev / Next Sentence
+      if (e.altKey && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSentence();
+      }
+      if (e.altKey && e.key === 'ArrowRight') {
+        e.preventDefault();
+        nextSentence();
+      }
+
+      // [ / ] -> Speed decrease / increase
+      if (e.key === '[') {
+        e.preventDefault();
+        setRate(rate - 0.25);
+      }
+      if (e.key === ']') {
+        e.preventDefault();
+        setRate(rate + 0.25);
+      }
+
+      // L -> Open / Close Listen Panel
+      if (e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        if (readAloudStatus === 'idle' || readAloudStatus === 'stopped') {
+          if (id) startListening(id, currentPage);
+        }
+        setIsAudioPlayerOpen((prev) => !prev);
+      }
+
+      // M -> Toggle Mute Volume
+      if (e.key.toLowerCase() === 'm') {
+        e.preventDefault();
+        setVolume(volume > 0 ? 0 : 1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [readAloudStatus, rate, volume, id, currentPage, play, pause, resume, stop, nextSentence, prevSentence, setRate, setVolume, startListening]);
+
+  // Media Session API Integration
+  useEffect(() => {
+    if ('mediaSession' in navigator && docRecord) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: docRecord.name,
+        artist: 'Folira Read Aloud',
+        album: 'Offline Personal Library',
+        artwork: docRecord.thumbnailUrl ? [{ src: docRecord.thumbnailUrl, sizes: '192x192', type: 'image/png' }] : [],
+      });
+
+      navigator.mediaSession.setActionHandler('play', () => resume());
+      navigator.mediaSession.setActionHandler('pause', () => pause());
+      navigator.mediaSession.setActionHandler('stop', () => stop());
+      navigator.mediaSession.setActionHandler('previoustrack', () => prevSentence());
+      navigator.mediaSession.setActionHandler('nexttrack', () => nextSentence());
+    }
+  }, [docRecord, resume, pause, stop, prevSentence, nextSentence]);
 
   // Auto-hide toolbar after 4 seconds of inactivity
   const handleUserActivity = () => {
@@ -63,6 +168,13 @@ export const ReaderPage: React.FC = () => {
       closeReaderSession();
     };
   }, [id, loadReaderSession, closeReaderSession]);
+
+  const handleOpenListen = async () => {
+    if (id && (readAloudStatus === 'idle' || readAloudStatus === 'stopped')) {
+      await startListening(id, currentPage);
+    }
+    setIsAudioPlayerOpen(true);
+  };
 
   // Apply reading theme class to page container
   const themeClass =
@@ -122,13 +234,22 @@ export const ReaderPage: React.FC = () => {
   return (
     <div className={`h-screen w-screen flex flex-col overflow-hidden relative select-none ${themeClass}`}>
       {/* Desktop & Mobile Reader Toolbar */}
-      <ReaderToolbar isVisible={isToolbarVisible} />
+      <ReaderToolbar isVisible={isToolbarVisible} onOpenListen={handleOpenListen} />
+
+      {/* Spoken Text Highlight Banner */}
+      <SpokenTextHighlight />
 
       {/* Main Canvas & Sidebar Container */}
       <div className="flex-1 flex overflow-hidden relative" onClick={() => setIsToolbarVisible((prev) => !prev)}>
         <PdfCanvas pdfDoc={pdfDocProxy} pageNumber={currentPage} />
         <ReaderSidebar />
       </div>
+
+      {/* Responsive Mini Player */}
+      <MiniAudioPlayer onExpand={() => setIsAudioPlayerOpen(true)} />
+
+      {/* Expanded Audio Player Dialog */}
+      <AudioPlayer isOpen={isAudioPlayerOpen} onClose={() => setIsAudioPlayerOpen(false)} />
 
       {/* Responsive Mobile Bottom Control Toolbar */}
       <div
@@ -143,6 +264,14 @@ export const ReaderPage: React.FC = () => {
           className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-[#252A27] dark:text-[#F8F5EE] disabled:opacity-30"
         >
           <ChevronLeft className="w-6 h-6" />
+        </button>
+
+        <button
+          onClick={handleOpenListen}
+          aria-label="Read Aloud"
+          className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-[#2F6B4F] dark:text-[#3D8B67]"
+        >
+          <Volume2 className="w-6 h-6" />
         </button>
 
         <span className="text-xs font-semibold text-[#525B56] dark:text-[#C0C8C3]">

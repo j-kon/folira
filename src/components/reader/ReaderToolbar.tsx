@@ -15,6 +15,7 @@ import {
   Search,
   Maximize,
   CheckCircle2,
+  Volume2,
 } from 'lucide-react';
 import { useReaderStore } from '@/stores/useReaderStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
@@ -23,9 +24,10 @@ import { Badge } from '../common/Badge';
 
 export interface ReaderToolbarProps {
   isVisible?: boolean;
+  onOpenListen?: () => void;
 }
 
-export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({ isVisible = true }) => {
+export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({ isVisible = true, onOpenListen }) => {
   const navigate = useNavigate();
 
   const {
@@ -160,6 +162,17 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({ isVisible = true }
           variant={isCurrentPageBookmarked ? 'secondary' : 'ghost'}
           onClick={() => addBookmarkForCurrentPage()}
         />
+
+        {/* Listen / Read Aloud Button */}
+        {onOpenListen && (
+          <IconButton
+            aria-label="Read Aloud Listen Panel"
+            title="Read Aloud (Listen)"
+            icon={<Volume2 className="w-4 h-4 text-[#2F6B4F] dark:text-[#3D8B67]" />}
+            variant="ghost"
+            onClick={onOpenListen}
+          />
+        )}
 
         {/* Search Placeholder button */}
         <IconButton
