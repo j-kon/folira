@@ -1,0 +1,68 @@
+/* Light Theme (Default) */
+[data-theme='light'], :root {
+  --bg-app: var(--color-paper);
+  --bg-surface: var(--color-warm-white);
+  --bg-surface-hover: #F2EFE8;
+  --bg-muted: var(--color-soft-stone);
+  
+  --text-primary: var(--color-graphite);
+  --text-secondary: #525B56;
+  --text-muted: #7A857F;
+  
+  --border-subtle: #E2DFD7;
+  --border-strong: #C4C0B5;
+  
+  --brand-primary: var(--color-folira-forest);
+  --brand-hover: var(--color-deep-forest);
+  --brand-subtle: var(--color-soft-leaf);
+
+  --accent-gold: var(--color-reading-gold);
+
+  /* Reader canvas theme defaults */
+  --reader-bg: var(--color-paper);
+  --reader-text: var(--color-graphite);
+}
+
+/* Dark Theme */
+[data-theme='dark'] {
+  --bg-app: var(--color-deep-ink);
+  --bg-surface: #1E2420;
+  --bg-surface-hover: #2A322C;
+  --bg-muted: #2E3630;
+  
+  --text-primary: #F8F5EE;
+  --text-secondary: #C0C8C3;
+  --text-muted: #8E9992;
+  
+  --border-subtle: #2D3630;
+  --border-strong: #404B43;
+  
+  --brand-primary: #3D8B67;
+  --brand-hover: #4CA37A;
+  --brand-subtle: #1C382B;
+
+  --accent-gold: #D4A559;
+
+  /* Reader canvas dark theme defaults */
+  --reader-bg: var(--color-deep-ink);
+  --reader-text: #F8F5EE;
+}
+
+/* Reader Specific Theme Classes */
+.theme-reader-paper {
+  --reader-bg: #F8F5EE;
+  --reader-text: #252A27;
+  --reader-toolbar-bg: #FFFDF8;
+}
+
+.theme-reader-night {
+  --reader-bg: #151A17;
+  --reader-text: #F8F5EE;
+  --reader-toolbar-bg: #1E2420;
+}
+
+.theme-reader-sepia {
+  --reader-bg: #F2E4CB;
+  --reader-text: #3E2723;
+  --reader-toolbar-bg: #EADBBF;
+}
