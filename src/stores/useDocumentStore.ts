@@ -2,7 +2,9 @@ import { create } from 'zustand';
 import type { DocumentRecord, DocumentFilter, ViewMode, SortOption } from '@/types/document';
 import { documentStorage } from '@/services/documentStorage';
 import { pdfService } from '@/services/pdfService';
+import { epubParserService } from '@/services/epubParserService';
 import { validatePdfFile } from '@/utils/validators';
+import { validateEpubFile } from '@/services/epubValidator';
 import { calculateFileFingerprint } from '@/utils/crypto';
 import { getStorageEstimate } from '@/utils/storageQuota';
 import { useNotificationStore } from './useNotificationStore';
@@ -66,11 +68,22 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       return null;
     }
 
+    const isEpub = file.name.toLowerCase().endsWith('.epub') || file.type === 'application/epub+zip';
+
     // 1. Validate file format & magic bytes
-    const validation = await validatePdfFile(file);
-    if (!validation.isValid) {
-      showToast(validation.error || 'Invalid PDF file.', 'error');
-      return null;
+    if (isEpub) {
+      try {
+        await validateEpubFile(file);
+      } catch (err: any) {
+        showToast(err?.message || 'Invalid EPUB file.', 'error');
+        return null;
+      }
+    } else {
+      const validation = await validatePdfFile(file);
+      if (!validation.isValid) {
+        showToast(validation.error || 'Invalid PDF file.', 'error');
+        return null;
+      }
     }
 
     // 2. Storage Quota Check
@@ -105,26 +118,35 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       console.warn('Fingerprint calculation failed:', err);
     }
 
-    set({ isUploading: true, uploadProgressMessage: 'Parsing PDF file contents...' });
+    set({ isUploading: true, uploadProgressMessage: `Parsing ${isEpub ? 'EPUB' : 'PDF'} file contents...` });
 
     try {
-      // 4. Parse PDF via PDF.js
-      const pdfDoc = await pdfService.loadDocument(file);
-      const totalPages = pdfDoc.numPages;
+      let totalPages = 1;
+      let thumbnailUrl: string | undefined = undefined;
+      let epubMetadata;
+      const cleanName = isEpub
+        ? file.name.replace(/\.epub$/i, '')
+        : file.name.replace(/\.pdf$/i, '');
 
-      set({ uploadProgressMessage: 'Generating document thumbnail...' });
-      const thumbnailUrl = await pdfService.generateThumbnail(pdfDoc);
+      if (isEpub) {
+        const { packageData, coverBlobUrl } = await epubParserService.parseEpub(file);
+        totalPages = packageData.spine.length || 1;
+        thumbnailUrl = coverBlobUrl;
+        epubMetadata = packageData.metadata;
+      } else {
+        const pdfDoc = await pdfService.loadDocument(file);
+        totalPages = pdfDoc.numPages;
+        set({ uploadProgressMessage: 'Generating document thumbnail...' });
+        thumbnailUrl = await pdfService.generateThumbnail(pdfDoc);
+      }
 
       set({ uploadProgressMessage: 'Saving to browser local database...' });
-
-      // Clean file name
-      const cleanName = file.name.endsWith('.pdf') ? file.name.slice(0, -4) : file.name;
 
       const newDoc: DocumentRecord = {
         id: crypto.randomUUID(),
         name: cleanName,
         originalName: file.name,
-        mimeType: file.type || 'application/pdf',
+        mimeType: file.type || (isEpub ? 'application/epub+zip' : 'application/pdf'),
         fileSize: file.size,
         fileBlob: file,
         totalPages: totalPages > 0 ? totalPages : 1,
@@ -136,6 +158,9 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
         lastOpenedAt: null,
         fingerprint: fingerprint || crypto.randomUUID(),
         thumbnailUrl,
+        format: isEpub ? 'epub' : 'pdf',
+        epubMetadata,
+        chapterIndex: 0,
       };
 
       await documentStorage.saveDocument(newDoc);
@@ -145,10 +170,10 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       set({ isUploading: false, uploadProgressMessage: null, duplicateDoc: null, pendingFile: null });
       return newDoc;
     } catch (error: any) {
-      console.error('PDF Import error:', error);
-      let message = `Failed to parse PDF document "${file.name}".`;
+      console.error('Import error:', error);
+      let message = `Failed to parse document "${file.name}".`;
       if (error?.name === 'PasswordException' || error?.message?.includes('password')) {
-        message = `"${file.name}" is password-protected or encrypted. Please remove password protection before importing.`;
+        message = `"${file.name}" is password-protected. Please remove password protection before importing.`;
       } else if (error?.name === 'QuotaExceededError' || error?.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
         message = `Browser storage quota exceeded. Please remove existing documents or free up disk space.`;
       } else if (error?.message) {
@@ -162,10 +187,9 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
   },
 
   resolveDuplicateImportCopy: async () => {
-    const file = get().pendingFile;
-    if (!file) return null;
-    set({ duplicateDoc: null });
-    return get().importDocument(file, true);
+    const { pendingFile, importDocument } = get();
+    if (!pendingFile) return null;
+    return importDocument(pendingFile, true);
   },
 
   dismissDuplicateModal: () => {
@@ -175,63 +199,30 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
   toggleFavourite: async (id: string) => {
     const doc = get().documents.find((d) => d.id === id);
     if (!doc) return;
-    const newFavState = !doc.isFavourite;
-    try {
-      await documentStorage.toggleFavourite(id, newFavState);
-      set((state) => ({
-        documents: state.documents.map((d) =>
-          d.id === id ? { ...d, isFavourite: newFavState, updatedAt: Date.now() } : d
-        ),
-      }));
-    } catch (err) {
-      console.error('Failed to toggle favourite:', err);
-    }
+    const updatedStatus = !doc.isFavourite;
+    await documentStorage.toggleFavourite(id, updatedStatus);
+    await get().loadDocuments();
   },
 
   renameDocument: async (id: string, newName: string) => {
-    try {
-      await documentStorage.renameDocument(id, newName);
-      set((state) => ({
-        documents: state.documents.map((d) =>
-          d.id === id ? { ...d, name: newName.trim(), updatedAt: Date.now() } : d
-        ),
-      }));
-      useNotificationStore.getState().showToast('Document renamed', 'success');
-    } catch (err) {
-      console.error('Failed to rename document:', err);
-      useNotificationStore.getState().showToast('Failed to rename document', 'error');
-    }
+    await documentStorage.renameDocument(id, newName);
+    await get().loadDocuments();
   },
 
   deleteDocument: async (id: string) => {
-    const doc = get().documents.find((d) => d.id === id);
-    try {
-      await documentStorage.deleteDocument(id);
-      set((state) => ({
-        documents: state.documents.filter((d) => d.id !== id),
-      }));
-      useNotificationStore
-        .getState()
-        .showToast(doc ? `Removed "${doc.name}" from library` : 'Document deleted', 'info');
-    } catch (err) {
-      console.error('Failed to delete document:', err);
-      useNotificationStore.getState().showToast('Failed to remove document', 'error');
-    }
+    await documentStorage.deleteDocument(id);
+    await get().loadDocuments();
+    useNotificationStore.getState().showToast('Document deleted from library.', 'info');
   },
 
   clearAllDocuments: async () => {
-    try {
-      await documentStorage.clearAllData();
-      set({ documents: [] });
-      useNotificationStore.getState().showToast('Cleared all library documents and reading data.', 'info');
-    } catch (err) {
-      console.error('Failed to clear documents:', err);
-      useNotificationStore.getState().showToast('Could not clear local data.', 'error');
-    }
+    await documentStorage.clearAllData();
+    await get().loadDocuments();
+    useNotificationStore.getState().showToast('All library documents cleared.', 'info');
   },
 
-  setSearchQuery: (searchQuery) => set({ searchQuery }),
-  setFilter: (filter) => set({ filter }),
-  setSortOption: (sortOption) => set({ sortOption }),
-  setViewMode: (viewMode) => set({ viewMode }),
+  setSearchQuery: (query: string) => set({ searchQuery: query }),
+  setFilter: (filter: DocumentFilter) => set({ filter }),
+  setSortOption: (option: SortOption) => set({ sortOption: option }),
+  setViewMode: (mode: ViewMode) => set({ viewMode: mode }),
 }));
