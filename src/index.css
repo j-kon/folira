@@ -1,67 +1,35 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+@import "./styles/tokens.css";
+@import "./styles/typography.css";
+@import "./styles/themes.css";
+@import "./styles/utilities.css";
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 @theme {
-  --color-warm-bg: #FAF8F5;
-  --color-warm-card: #FFFFFF;
-  --color-warm-subtle: #F4F1EA;
-  --color-warm-border: #E8E5DF;
-  
-  --color-charcoal: #1C1E21;
-  --color-charcoal-muted: #6B7280;
-  
-  --color-emerald-accent: #2E6B56;
-  --color-emerald-hover: #245443;
-  --color-emerald-light: #E8F2EE;
-  
-  --color-dark-bg: #121316;
-  --color-dark-card: #1C1E24;
-  --color-dark-subtle: #242831;
-  --color-dark-border: #2D3139;
-  --color-dark-text: #F3F4F6;
-  --color-dark-muted: #9CA3AF;
+  --color-folira-forest: #2F6B4F;
+  --color-deep-forest: #204B38;
+  --color-soft-leaf: #DDEBE2;
+  --color-paper: #F8F5EE;
+  --color-warm-white: #FFFDF8;
+  --color-soft-stone: #E8E5DD;
+  --color-graphite: #252A27;
+  --color-deep-ink: #151A17;
+  --color-reading-gold: #C89545;
+  --color-soft-gold: #F2E4CB;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Literata', Georgia, Cambria, serif;
 }
 
 @layer base {
   body {
-    background-color: var(--color-warm-bg);
-    color: var(--color-charcoal);
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-
-  .dark body {
-    background-color: var(--color-dark-bg);
-    color: var(--color-dark-text);
-  }
-}
-
-/* Custom scrollbar for distraction-free reading */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #374151;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #4b5563;
 }
