@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   X,
   Info,
@@ -7,9 +7,60 @@ import {
   ListTree,
   Trash2,
   BookOpen,
+  ChevronRight,
 } from 'lucide-react';
 import { useReaderStore } from '@/stores/useReaderStore';
+import { pdfService } from '@/services/pdfService';
+import type { TocOutlineItem } from '@/types/search';
 import { formatFileSize, formatDate } from '@/utils/formatters';
+
+interface OutlineItemProps {
+  item: TocOutlineItem;
+  onNavigate: (page: number) => void;
+  depth?: number;
+}
+
+const OutlineNodeItem: React.FC<OutlineItemProps> = ({ item, onNavigate, depth = 0 }) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const hasChildren = item.items && item.items.length > 0;
+
+  return (
+    <div className="flex flex-col gap-1" style={{ paddingLeft: `${depth * 12}px` }}>
+      <div
+        onClick={() => onNavigate(item.pageNumber)}
+        className="flex items-center justify-between p-2 rounded-lg hover:bg-[#FAF8F5] dark:hover:bg-[#151A17] border border-transparent hover:border-[#E8E5DD] dark:hover:border-[#2D3630] cursor-pointer transition-colors group"
+      >
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          {hasChildren && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded((prev) => !prev);
+              }}
+              className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 shrink-0"
+            >
+              <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+            </button>
+          )}
+          <span className="text-xs font-medium text-[#252A27] dark:text-[#F8F5EE] group-hover:text-[#2F6B4F] dark:group-hover:text-[#3D8B67] truncate">
+            {item.title}
+          </span>
+        </div>
+        <span className="text-[10px] font-semibold text-[#7A857F] dark:text-[#8E9992] px-1.5 py-0.5 rounded bg-[#E8E5DD]/50 dark:bg-[#2D3630] shrink-0 ml-1">
+          P. {item.pageNumber}
+        </span>
+      </div>
+
+      {hasChildren && isExpanded && (
+        <div className="flex flex-col gap-1">
+          {item.items!.map((child) => (
+            <OutlineNodeItem key={child.id} item={child} onNavigate={onNavigate} depth={depth + 1} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const ReaderSidebar: React.FC = () => {
   const {
@@ -23,7 +74,23 @@ export const ReaderSidebar: React.FC = () => {
     setCurrentPage,
     bookmarks,
     deleteBookmark,
+    pdfDocProxy,
   } = useReaderStore();
+
+  const [outlineItems, setOutlineItems] = useState<TocOutlineItem[]>([]);
+  const [isLoadingToc, setIsLoadingToc] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (activeSidebarTab === 'toc' && pdfDocProxy) {
+      setIsLoadingToc(true);
+      pdfService.getOutline(pdfDocProxy).then((items) => {
+        setOutlineItems(items);
+        setIsLoadingToc(false);
+      }).catch(() => {
+        setIsLoadingToc(false);
+      });
+    }
+  }, [activeSidebarTab, pdfDocProxy]);
 
   if (!isSidebarOpen) return null;
 
@@ -83,75 +150,69 @@ export const ReaderSidebar: React.FC = () => {
 
         <button
           onClick={toggleSidebar}
+          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           aria-label="Close sidebar"
-          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Tab Content Body */}
-      <div className="flex-1 overflow-y-auto p-4">
+      {/* Sidebar Tab Body Content */}
+      <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
         {/* INFO TAB */}
-        {activeSidebarTab === 'info' && (
-          <div className="flex flex-col gap-4 text-xs">
+        {activeSidebarTab === 'info' && doc && (
+          <div className="flex flex-col gap-4">
             <h3 className="font-semibold text-sm text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)] border-b border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] pb-2">
               Document Information
             </h3>
 
-            <div className="space-y-3">
+            <div className="space-y-3 text-xs">
               <div>
                 <span className="text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] block mb-0.5">
                   Title
                 </span>
                 <span className="font-medium text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)] break-words">
-                  {doc?.name}
+                  {doc.name}
                 </span>
               </div>
 
               <div>
                 <span className="text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] block mb-0.5">
-                  Original File Name
+                  Original Filename
                 </span>
-                <span className="font-medium text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)] break-all">
-                  {doc?.originalName}
-                </span>
+                <span className="font-mono text-gray-600 dark:text-gray-300 break-all">{doc.originalName}</span>
               </div>
 
-              <div>
-                <span className="text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] block mb-0.5">
-                  Total Pages
-                </span>
-                <span className="font-medium text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
-                  {totalPages} pages
-                </span>
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)]">
+                <div>
+                  <span className="text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] block">
+                    File Size
+                  </span>
+                  <span className="font-medium">{formatFileSize(doc.fileSize)}</span>
+                </div>
+                <div>
+                  <span className="text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] block">
+                    Total Pages
+                  </span>
+                  <span className="font-medium">{totalPages}</span>
+                </div>
               </div>
 
-              <div>
-                <span className="text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] block mb-0.5">
-                  File Size
-                </span>
-                <span className="font-medium text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
-                  {doc ? formatFileSize(doc.fileSize) : '-'}
-                </span>
-              </div>
-
-              <div>
-                <span className="text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] block mb-0.5">
-                  Last Opened
-                </span>
-                <span className="font-medium text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
-                  {doc ? formatDate(doc.lastOpenedAt) : '-'}
-                </span>
-              </div>
-
-              <div>
-                <span className="text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] block mb-0.5">
-                  Import Date
-                </span>
-                <span className="font-medium text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
-                  {doc ? formatDate(doc.createdAt) : '-'}
-                </span>
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)]">
+                <div>
+                  <span className="text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] block">
+                    Import Date
+                  </span>
+                  <span className="font-medium">{formatDate(doc.createdAt)}</span>
+                </div>
+                <div>
+                  <span className="text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] block">
+                    Last Opened
+                  </span>
+                  <span className="font-medium">
+                    {doc.lastOpenedAt ? formatDate(doc.lastOpenedAt) : 'Just now'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -161,22 +222,24 @@ export const ReaderSidebar: React.FC = () => {
         {activeSidebarTab === 'thumbnails' && (
           <div className="flex flex-col gap-3">
             <h3 className="font-semibold text-sm text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)] border-b border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] pb-2">
-              Page Thumbnails
+              Page Navigator ({totalPages})
             </h3>
 
-            <div className="grid grid-cols-3 gap-2 mt-1">
+            <div className="grid grid-cols-2 gap-3">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                 <button
                   key={pageNum}
                   onClick={() => setCurrentPage(pageNum)}
-                  className={`aspect-[3/4] p-2 rounded-lg border text-xs font-semibold flex flex-col items-center justify-center transition-all ${
-                    pageNum === currentPage
-                      ? 'border-[var(--color-emerald-accent)] bg-[var(--color-emerald-light)] text-[var(--color-emerald-accent)] dark:bg-emerald-950/60 ring-2 ring-[var(--color-emerald-accent)]'
-                      : 'border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] bg-[var(--color-warm-subtle)] dark:bg-[var(--color-dark-subtle)] text-gray-600 dark:text-gray-300 hover:border-gray-400'
+                  className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${
+                    currentPage === pageNum
+                      ? 'border-[#2F6B4F] bg-[#2F6B4F]/10 dark:bg-[#3D8B67]/20 font-bold text-[#2F6B4F] dark:text-[#3D8B67] shadow-sm'
+                      : 'border-[#E8E5DD] dark:border-[#2D3630] hover:border-[#2F6B4F] text-[#525B56] dark:text-[#C0C8C3]'
                   }`}
                 >
-                  <BookOpen className="w-4 h-4 mb-1 opacity-60" />
-                  <span>Pg {pageNum}</span>
+                  <div className="w-12 h-16 bg-white dark:bg-[#151A17] border border-[#E8E5DD] dark:border-[#2D3630] rounded shadow-2xs flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-[#7A857F]" />
+                  </div>
+                  <span className="text-xs">Page {pageNum}</span>
                 </button>
               ))}
             </div>
@@ -237,9 +300,26 @@ export const ReaderSidebar: React.FC = () => {
             <h3 className="font-semibold text-sm text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)] border-b border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] pb-2">
               Table of Contents
             </h3>
-            <p className="text-xs text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] py-4 text-center">
-              Structured Table of Contents extraction will be available in an upcoming update.
-            </p>
+
+            {isLoadingToc ? (
+              <p className="text-xs text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] py-4 text-center">
+                Extracting PDF Table of Contents...
+              </p>
+            ) : outlineItems.length === 0 ? (
+              <p className="text-xs text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] py-4 text-center">
+                This document does not contain an embedded structural Table of Contents.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-1">
+                {outlineItems.map((item) => (
+                  <OutlineNodeItem
+                    key={item.id}
+                    item={item}
+                    onNavigate={(page) => setCurrentPage(page)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
