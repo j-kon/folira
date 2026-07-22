@@ -12,6 +12,8 @@ export interface PdfCanvasProps {
 export const PdfCanvas: React.FC<PdfCanvasProps> = ({ pdfDoc, pageNumber }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const activeRenderTaskRef = useRef<pdfjsLib.RenderTask | null>(null);
+
   const [isRendering, setIsRendering] = useState(false);
   const [renderError, setRenderError] = useState<string | null>(null);
 
@@ -22,6 +24,17 @@ export const PdfCanvas: React.FC<PdfCanvasProps> = ({ pdfDoc, pageNumber }) => {
 
     const render = async () => {
       if (!canvasRef.current || !pdfDoc || !containerRef.current) return;
+
+      // Cancel previous ongoing render task if page or zoom changed quickly
+      if (activeRenderTaskRef.current) {
+        try {
+          activeRenderTaskRef.current.cancel();
+        } catch {
+          // ignore task cancellation error
+        }
+        activeRenderTaskRef.current = null;
+      }
+
       setIsRendering(true);
       setRenderError(null);
 
@@ -31,28 +44,32 @@ export const PdfCanvas: React.FC<PdfCanvasProps> = ({ pdfDoc, pageNumber }) => {
         if (zoomMode === 'fit-width' && containerRef.current) {
           const page = await pdfDoc.getPage(pageNumber);
           const viewport = page.getViewport({ scale: 1.0 });
-          const containerWidth = containerRef.current.clientWidth - 48; // padding margin
+          const containerWidth = containerRef.current.clientWidth - 48;
           if (containerWidth > 0) {
             computedScale = containerWidth / viewport.width;
           }
         }
 
         if (!isCancelled && canvasRef.current) {
-          await pdfService.renderPageToCanvas(
+          const result = await pdfService.renderPageToCanvas(
             pdfDoc,
             pageNumber,
             canvasRef.current,
             computedScale
           );
+          activeRenderTaskRef.current = result.renderTask;
+
+          await result.renderTask.promise;
         }
-      } catch (err) {
-        if (!isCancelled) {
+      } catch (err: any) {
+        if (!isCancelled && err?.name !== 'RenderingCancelledException') {
           console.error('Page render error:', err);
-          setRenderError('Could not render this page.');
+          setRenderError('Could not render page. The PDF page data may be damaged.');
         }
       } finally {
         if (!isCancelled) {
           setIsRendering(false);
+          activeRenderTaskRef.current = null;
         }
       }
     };
@@ -61,11 +78,18 @@ export const PdfCanvas: React.FC<PdfCanvasProps> = ({ pdfDoc, pageNumber }) => {
 
     return () => {
       isCancelled = true;
+      if (activeRenderTaskRef.current) {
+        try {
+          activeRenderTaskRef.current.cancel();
+        } catch {
+          // ignore cancellation
+        }
+      }
     };
   }, [pdfDoc, pageNumber, zoomLevel, zoomMode]);
 
   const bgStyles = {
-    light: 'bg-white shadow-md',
+    light: 'bg-white shadow-md border-gray-200/80',
     sepia: 'bg-[#FAF4E8] shadow-md border-[#E6DCB8]',
     dark: 'bg-[#1C1E24] text-white shadow-xl border-gray-800',
   };
@@ -76,7 +100,7 @@ export const PdfCanvas: React.FC<PdfCanvasProps> = ({ pdfDoc, pageNumber }) => {
       className="flex-1 w-full h-full overflow-auto flex flex-col items-center p-4 sm:p-8 relative select-none"
     >
       {isRendering && (
-        <div className="absolute top-6 right-6 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-medium animate-in fade-in">
+        <div className="absolute top-6 right-6 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md text-white text-xs font-medium animate-in fade-in">
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
           <span>Rendering page {pageNumber}...</span>
         </div>
@@ -87,7 +111,7 @@ export const PdfCanvas: React.FC<PdfCanvasProps> = ({ pdfDoc, pageNumber }) => {
           <p className="font-semibold text-sm">{renderError}</p>
         </div>
       ) : (
-        <div className={`transition-all duration-150 rounded-xl overflow-hidden border border-gray-200/80 dark:border-gray-800/80 ${bgStyles[backgroundTheme]}`}>
+        <div className={`transition-all duration-150 rounded-xl overflow-hidden border ${bgStyles[backgroundTheme]}`}>
           <canvas ref={canvasRef} className="block mx-auto max-w-full" />
         </div>
       )}

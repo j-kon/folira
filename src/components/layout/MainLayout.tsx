@@ -1,6 +1,7 @@
 import React from 'react';
 import { Header } from './Header';
 import { ToastContainer } from '../common/ToastContainer';
+import { PWAUpdateBanner } from '../common/PWAUpdateBanner';
 
 export interface MainLayoutProps {
   children: React.ReactNode;
@@ -18,6 +19,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         {children}
       </main>
       <ToastContainer />
+      <PWAUpdateBanner />
     </div>
   );
 };

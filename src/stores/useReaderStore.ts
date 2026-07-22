@@ -23,6 +23,7 @@ interface ReaderState {
   bookmarks: BookmarkRecord[];
   isLoading: boolean;
   error: string | null;
+  lastSavedAt: number | null;
 
   loadReaderSession: (documentId: string) => Promise<void>;
   setCurrentPage: (pageNumber: number) => Promise<void>;
@@ -56,6 +57,7 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
   bookmarks: [],
   isLoading: false,
   error: null,
+  lastSavedAt: null,
 
   loadReaderSession: async (documentId: string) => {
     set({ isLoading: true, error: null, activeDocumentId: documentId });
@@ -66,10 +68,8 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
         return;
       }
 
-      // Update lastOpenedAt
       await documentStorage.updateLastOpened(documentId);
 
-      // Load PDF via PDF.js
       const pdfProxy = await pdfService.loadDocument(doc.fileBlob);
       const bookmarks = await documentStorage.getBookmarksForDocument(documentId);
 
@@ -82,14 +82,18 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
         totalPages: pdfProxy.numPages,
         bookmarks,
         isLoading: false,
+        lastSavedAt: Date.now(),
       });
 
-      // Refresh main document store list so lastOpenedAt is updated
       useDocumentStore.getState().loadDocuments();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load reader session:', err);
+      let errorMsg = 'Failed to open document. The file data may be missing or corrupted.';
+      if (err?.name === 'PasswordException' || err?.message?.includes('password')) {
+        errorMsg = 'This PDF document is password-protected or encrypted.';
+      }
       set({
-        error: 'Failed to open document. The file data may be missing or corrupted.',
+        error: errorMsg,
         isLoading: false,
       });
     }
@@ -100,23 +104,20 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
     if (!doc || !activeDocumentId) return;
 
     const safePage = Math.min(Math.max(1, pageNumber), totalPages);
-    set({ currentPage: safePage });
+    set({ currentPage: safePage, lastSavedAt: Date.now() });
 
-    try {
-      await documentStorage.updateReadingProgress(activeDocumentId, safePage, totalPages);
-      // Update local doc state
-      set((state) => ({
-        document: state.document
-          ? {
-              ...state.document,
-              currentPage: safePage,
-              progressPercentage: Math.round((safePage / totalPages) * 100),
-            }
-          : null,
-      }));
-    } catch (err) {
-      console.error('Failed to save reading progress:', err);
-    }
+    // Use debounced saver to prevent rapid IDB writes
+    documentStorage.debouncedUpdateReadingProgress(activeDocumentId, safePage, totalPages);
+
+    set((state) => ({
+      document: state.document
+        ? {
+            ...state.document,
+            currentPage: safePage,
+            progressPercentage: Math.round((safePage / totalPages) * 100),
+          }
+        : null,
+    }));
   },
 
   nextPage: async () => {
@@ -135,7 +136,8 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
 
   setZoomLevel: (zoom) => {
     if (typeof zoom === 'number') {
-      set({ zoomLevel: Math.max(0.5, Math.min(3.0, zoom)), zoomMode: zoom });
+      const clamped = Math.max(0.5, Math.min(3.0, Math.round(zoom * 100) / 100));
+      set({ zoomLevel: clamped, zoomMode: clamped });
     } else {
       set({ zoomMode: zoom });
     }
@@ -163,7 +165,6 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
     const { activeDocumentId, currentPage, bookmarks } = get();
     if (!activeDocumentId) return;
 
-    // Check if page is already bookmarked
     const existing = bookmarks.find((b) => b.pageNumber === currentPage);
     if (existing) {
       useNotificationStore.getState().showToast(`Page ${currentPage} is already bookmarked`, 'info');
@@ -194,6 +195,19 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
   },
 
   closeReaderSession: () => {
+    const { pdfDocProxy } = get();
+    if (pdfDocProxy) {
+      try {
+        if (typeof (pdfDocProxy as any).destroy === 'function') {
+          (pdfDocProxy as any).destroy();
+        } else if (typeof (pdfDocProxy as any).cleanup === 'function') {
+          (pdfDocProxy as any).cleanup();
+        }
+      } catch (e) {
+        console.warn('PDF Proxy cleanup error:', e);
+      }
+    }
+
     set({
       activeDocumentId: null,
       document: null,
@@ -205,6 +219,7 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
       isSidebarOpen: false,
       bookmarks: [],
       error: null,
+      lastSavedAt: null,
     });
   },
 }));

@@ -1,10 +1,17 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import workerRawCode from 'pdfjs-dist/build/pdf.worker.min.mjs?raw';
 
-// Initialize PDF.js worker using Vite worker URL pattern
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).toString();
+// Create an inline Blob URL for PDF.js worker so offline dev/prod loading requires zero network calls
+const workerBlob = new Blob([workerRawCode], { type: 'text/javascript' });
+const workerBlobUrl = URL.createObjectURL(workerBlob);
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = workerBlobUrl;
+
+export interface RenderPageResult {
+  renderTask: pdfjsLib.RenderTask;
+  width: number;
+  height: number;
+}
 
 export const pdfService = {
   async loadDocument(blob: Blob): Promise<pdfjsLib.PDFDocumentProxy> {
@@ -46,7 +53,7 @@ export const pdfService = {
     pageNumber: number,
     canvas: HTMLCanvasElement,
     scale: number = 1.0
-  ): Promise<{ width: number; height: number }> {
+  ): Promise<RenderPageResult> {
     const page = await pdfDoc.getPage(pageNumber);
     const pixelRatio = window.devicePixelRatio || 1;
     const viewport = page.getViewport({ scale: scale * pixelRatio });
@@ -69,9 +76,10 @@ export const pdfService = {
       canvas: canvas,
     } as unknown as Parameters<pdfjsLib.PDFPageProxy['render']>[0];
 
-    await page.render(renderContext).promise;
+    const renderTask = page.render(renderContext);
 
     return {
+      renderTask,
       width: unscaledViewport.width,
       height: unscaledViewport.height,
     };

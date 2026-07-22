@@ -3,6 +3,8 @@ import type { DocumentRecord, DocumentFilter, ViewMode, SortOption } from '@/typ
 import { documentStorage } from '@/services/documentStorage';
 import { pdfService } from '@/services/pdfService';
 import { validatePdfFile } from '@/utils/validators';
+import { calculateFileFingerprint } from '@/utils/crypto';
+import { getStorageEstimate } from '@/utils/storageQuota';
 import { useNotificationStore } from './useNotificationStore';
 
 interface DocumentState {
@@ -15,11 +17,17 @@ interface DocumentState {
   sortOption: SortOption;
   viewMode: ViewMode;
 
+  duplicateDoc: DocumentRecord | null;
+  pendingFile: File | null;
+
   loadDocuments: () => Promise<void>;
-  importDocument: (file: File) => Promise<DocumentRecord | null>;
+  importDocument: (file: File, forceDuplicate?: boolean) => Promise<DocumentRecord | null>;
+  resolveDuplicateImportCopy: () => Promise<DocumentRecord | null>;
+  dismissDuplicateModal: () => void;
   toggleFavourite: (id: string) => Promise<void>;
   renameDocument: (id: string, newName: string) => Promise<void>;
   deleteDocument: (id: string) => Promise<void>;
+  clearAllDocuments: () => Promise<void>;
   setSearchQuery: (query: string) => void;
   setFilter: (filter: DocumentFilter) => void;
   setSortOption: (option: SortOption) => void;
@@ -35,6 +43,8 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
   filter: 'all',
   sortOption: 'lastOpened',
   viewMode: 'grid',
+  duplicateDoc: null,
+  pendingFile: null,
 
   loadDocuments: async () => {
     set({ isLoading: true });
@@ -48,37 +58,64 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     }
   },
 
-  importDocument: async (file: File) => {
+  importDocument: async (file: File, forceDuplicate = false) => {
     const { showToast } = useNotificationStore.getState();
 
-    // 1. Validate file
-    const validation = validatePdfFile(file);
+    // Prevent duplicate submission while already processing
+    if (get().isUploading) {
+      return null;
+    }
+
+    // 1. Validate file format & magic bytes
+    const validation = await validatePdfFile(file);
     if (!validation.isValid) {
       showToast(validation.error || 'Invalid PDF file.', 'error');
       return null;
     }
 
-    // 2. Check duplicate
+    // 2. Storage Quota Check
     try {
-      const isDuplicate = await documentStorage.checkIsDuplicate(file.name, file.size);
-      if (isDuplicate) {
-        showToast(`"${file.name}" has already been imported into your library.`, 'info');
+      const estimate = await getStorageEstimate();
+      if (estimate.isAvailable && estimate.quota > 0) {
+        const remainingSpace = estimate.quota - estimate.usage;
+        if (file.size > remainingSpace) {
+          showToast(
+            `Insufficient storage space on this device. File requires ${(file.size / (1024 * 1024)).toFixed(1)} MB, but only ${(remainingSpace / (1024 * 1024)).toFixed(1)} MB is available.`,
+            'error'
+          );
+          return null;
+        }
       }
     } catch (err) {
-      console.warn('Duplicate check failed:', err);
+      console.warn('Storage quota pre-check error:', err);
     }
 
-    set({ isUploading: true, uploadProgressMessage: 'Parsing PDF file...' });
+    // 3. Fingerprint duplicate detection
+    let fingerprint = '';
+    try {
+      fingerprint = await calculateFileFingerprint(file);
+      if (!forceDuplicate) {
+        const existing = await documentStorage.checkIsDuplicateByFingerprint(fingerprint);
+        if (existing) {
+          set({ duplicateDoc: existing, pendingFile: file });
+          return null;
+        }
+      }
+    } catch (err) {
+      console.warn('Fingerprint calculation failed:', err);
+    }
+
+    set({ isUploading: true, uploadProgressMessage: 'Parsing PDF file contents...' });
 
     try {
-      // 3. Load PDF via PDF.js to verify validity & extract page count
+      // 4. Parse PDF via PDF.js
       const pdfDoc = await pdfService.loadDocument(file);
       const totalPages = pdfDoc.numPages;
 
       set({ uploadProgressMessage: 'Generating document thumbnail...' });
       const thumbnailUrl = await pdfService.generateThumbnail(pdfDoc);
 
-      set({ uploadProgressMessage: 'Saving to local storage...' });
+      set({ uploadProgressMessage: 'Saving to browser local database...' });
 
       // Clean file name
       const cleanName = file.name.endsWith('.pdf') ? file.name.slice(0, -4) : file.name;
@@ -97,6 +134,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
         createdAt: Date.now(),
         updatedAt: Date.now(),
         lastOpenedAt: null,
+        fingerprint: fingerprint || crypto.randomUUID(),
         thumbnailUrl,
       };
 
@@ -104,14 +142,34 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       await get().loadDocuments();
 
       showToast(`Successfully imported "${newDoc.name}"`, 'success');
-      set({ isUploading: false, uploadProgressMessage: null });
+      set({ isUploading: false, uploadProgressMessage: null, duplicateDoc: null, pendingFile: null });
       return newDoc;
-    } catch (error) {
+    } catch (error: any) {
       console.error('PDF Import error:', error);
-      showToast(`Failed to parse PDF document "${file.name}". File may be corrupted or encrypted.`, 'error');
-      set({ isUploading: false, uploadProgressMessage: null });
+      let message = `Failed to parse PDF document "${file.name}".`;
+      if (error?.name === 'PasswordException' || error?.message?.includes('password')) {
+        message = `"${file.name}" is password-protected or encrypted. Please remove password protection before importing.`;
+      } else if (error?.name === 'QuotaExceededError' || error?.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+        message = `Browser storage quota exceeded. Please remove existing documents or free up disk space.`;
+      } else if (error?.message) {
+        message += ` ${error.message}`;
+      }
+
+      showToast(message, 'error');
+      set({ isUploading: false, uploadProgressMessage: null, duplicateDoc: null, pendingFile: null });
       return null;
     }
+  },
+
+  resolveDuplicateImportCopy: async () => {
+    const file = get().pendingFile;
+    if (!file) return null;
+    set({ duplicateDoc: null });
+    return get().importDocument(file, true);
+  },
+
+  dismissDuplicateModal: () => {
+    set({ duplicateDoc: null, pendingFile: null });
   },
 
   toggleFavourite: async (id: string) => {
@@ -158,6 +216,17 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     } catch (err) {
       console.error('Failed to delete document:', err);
       useNotificationStore.getState().showToast('Failed to remove document', 'error');
+    }
+  },
+
+  clearAllDocuments: async () => {
+    try {
+      await documentStorage.clearAllData();
+      set({ documents: [] });
+      useNotificationStore.getState().showToast('Cleared all library documents and reading data.', 'info');
+    } catch (err) {
+      console.error('Failed to clear documents:', err);
+      useNotificationStore.getState().showToast('Could not clear local data.', 'error');
     }
   },
 

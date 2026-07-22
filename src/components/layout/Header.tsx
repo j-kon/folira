@@ -1,13 +1,24 @@
 import React, { useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { BookOpen, Search, Plus, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { BookOpen, Search, Plus, X, Settings } from 'lucide-react';
 import { useDocumentStore } from '@/stores/useDocumentStore';
 import { ThemeToggle } from './ThemeToggle';
 import { OfflineBadge } from '../common/OfflineBadge';
 import { Button } from '../common/Button';
+import { DuplicateModal } from '../library/DuplicateModal';
 
 export const Header: React.FC = () => {
-  const { searchQuery, setSearchQuery, importDocument, isUploading } = useDocumentStore();
+  const navigate = useNavigate();
+  const {
+    searchQuery,
+    setSearchQuery,
+    importDocument,
+    isUploading,
+    duplicateDoc,
+    dismissDuplicateModal,
+    resolveDuplicateImportCopy,
+  } = useDocumentStore();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -17,13 +28,21 @@ export const Header: React.FC = () => {
     }
   };
 
+  const handleOpenExisting = () => {
+    if (duplicateDoc) {
+      const docId = duplicateDoc.id;
+      dismissDuplicateModal();
+      navigate(`/reader/${docId}`);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-30 w-full bg-[var(--color-warm-bg)]/80 dark:bg-[var(--color-dark-bg)]/80 backdrop-blur-md border-b border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand / Logo */}
         <Link
           to="/"
-          className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-emerald-accent)] rounded-lg px-1"
+          className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-emerald-accent)] rounded-lg px-1 shrink-0"
         >
           <div className="w-8 h-8 rounded-xl bg-[var(--color-emerald-accent)] text-white flex items-center justify-center shadow-xs">
             <BookOpen className="w-4 h-4" />
@@ -55,7 +74,7 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Right side actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <OfflineBadge />
 
           <input
@@ -76,9 +95,26 @@ export const Header: React.FC = () => {
             <span className="hidden sm:inline">Import</span> Document
           </Button>
 
+          <Link
+            to="/settings"
+            title="Settings & Storage"
+            aria-label="Settings and Storage"
+            className="p-2 rounded-xl text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] hover:bg-[var(--color-warm-subtle)] dark:hover:bg-[var(--color-dark-subtle)] hover:text-[var(--color-charcoal)] dark:hover:text-[var(--color-dark-text)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-emerald-accent)]"
+          >
+            <Settings className="w-5 h-5" />
+          </Link>
+
           <ThemeToggle />
         </div>
       </div>
+
+      <DuplicateModal
+        isOpen={!!duplicateDoc}
+        onClose={dismissDuplicateModal}
+        existingDoc={duplicateDoc}
+        onOpenExisting={handleOpenExisting}
+        onImportCopy={resolveDuplicateImportCopy}
+      />
     </header>
   );
 };

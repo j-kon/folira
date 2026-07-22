@@ -12,6 +12,7 @@ export interface DocumentRecord {
   createdAt: number;
   updatedAt: number;
   lastOpenedAt: number | null;
+  fingerprint: string;
   thumbnailUrl?: string;
 }
 

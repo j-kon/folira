@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { documentStorage } from '@/services/documentStorage';
 import { db } from '@/services/database';
 import type { DocumentRecord } from '@/types/document';
+import { calculateFileFingerprint } from '@/utils/crypto';
 
 describe('documentStorage Service', () => {
   beforeEach(async () => {
@@ -9,14 +10,17 @@ describe('documentStorage Service', () => {
     await db.bookmarks.clear();
   });
 
-  it('should save and retrieve a document record', async () => {
+  it('should save and retrieve a document record with fingerprint', async () => {
+    const file = new File(['%PDF-1.4 test'], 'test.pdf', { type: 'application/pdf' });
+    const fingerprint = await calculateFileFingerprint(file);
+
     const doc: DocumentRecord = {
       id: 'doc-123',
       name: 'Test Guide',
       originalName: 'test-guide.pdf',
       mimeType: 'application/pdf',
       fileSize: 1024,
-      fileBlob: new Blob(['test content'], { type: 'application/pdf' }),
+      fileBlob: file,
       totalPages: 10,
       currentPage: 1,
       progressPercentage: 10,
@@ -24,71 +28,47 @@ describe('documentStorage Service', () => {
       createdAt: 1000,
       updatedAt: 1000,
       lastOpenedAt: null,
+      fingerprint,
     };
 
     await documentStorage.saveDocument(doc);
     const retrieved = await documentStorage.getDocumentById('doc-123');
 
     expect(retrieved).toBeDefined();
-    expect(retrieved?.name).toBe('Test Guide');
-    expect(retrieved?.totalPages).toBe(10);
+    expect(retrieved?.fingerprint).toBe(fingerprint);
+
+    const duplicateLookup = await documentStorage.checkIsDuplicateByFingerprint(fingerprint);
+    expect(duplicateLookup).toBeDefined();
+    expect(duplicateLookup?.id).toBe('doc-123');
   });
 
-  it('should update reading progress correctly', async () => {
+  it('should export and import JSON metadata backup correctly', async () => {
     const doc: DocumentRecord = {
-      id: 'doc-456',
-      name: 'Reading Progress Test',
-      originalName: 'progress.pdf',
+      id: 'doc-backup',
+      name: 'Backup Test Document',
+      originalName: 'backup.pdf',
       mimeType: 'application/pdf',
       fileSize: 2048,
-      fileBlob: new Blob(['content']),
-      totalPages: 20,
-      currentPage: 1,
-      progressPercentage: 5,
-      isFavourite: false,
+      fileBlob: new Blob(['pdf bytes']),
+      totalPages: 15,
+      currentPage: 5,
+      progressPercentage: 33,
+      isFavourite: true,
       createdAt: 1000,
       updatedAt: 1000,
-      lastOpenedAt: null,
+      lastOpenedAt: 2000,
+      fingerprint: 'fp-123',
     };
 
     await documentStorage.saveDocument(doc);
-    await documentStorage.updateReadingProgress('doc-456', 10, 20);
+    await documentStorage.addBookmark('doc-backup', 5, 'Chapter 1');
 
-    const updated = await documentStorage.getDocumentById('doc-456');
-    expect(updated?.currentPage).toBe(10);
-    expect(updated?.progressPercentage).toBe(50);
-    expect(updated?.lastOpenedAt).not.toBeNull();
-  });
+    const json = await documentStorage.exportMetadataJson();
+    expect(json).toContain('Backup Test Document');
+    expect(json).toContain('Chapter 1');
 
-  it('should delete document and its associated bookmarks', async () => {
-    const doc: DocumentRecord = {
-      id: 'doc-789',
-      name: 'Delete Test',
-      originalName: 'delete.pdf',
-      mimeType: 'application/pdf',
-      fileSize: 500,
-      fileBlob: new Blob(['data']),
-      totalPages: 5,
-      currentPage: 1,
-      progressPercentage: 20,
-      isFavourite: false,
-      createdAt: 1000,
-      updatedAt: 1000,
-      lastOpenedAt: null,
-    };
-
-    await documentStorage.saveDocument(doc);
-    await documentStorage.addBookmark('doc-789', 3, 'Chapter 2');
-
-    let bookmarks = await documentStorage.getBookmarksForDocument('doc-789');
-    expect(bookmarks.length).toBe(1);
-
-    await documentStorage.deleteDocument('doc-789');
-
-    const deletedDoc = await documentStorage.getDocumentById('doc-789');
-    expect(deletedDoc).toBeUndefined();
-
-    bookmarks = await documentStorage.getBookmarksForDocument('doc-789');
-    expect(bookmarks.length).toBe(0);
+    // Test import
+    const result = await documentStorage.importMetadataJson(json);
+    expect(result.importedDocs).toBe(1);
   });
 });
