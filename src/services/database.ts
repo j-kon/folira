@@ -2,6 +2,7 @@ import Dexie, { type Table } from 'dexie';
 import type { DocumentRecord, AnnotationRecord } from '@/types/document';
 import type { BookmarkRecord } from '@/types/bookmark';
 import type { ReadAloudProgress, VoicePackRecord } from '@/types/readAloud';
+import type { ReadingSessionRecord, ReadingGoalsRecord } from '@/types/analytics';
 import { calculateFileFingerprint } from '@/utils/crypto';
 
 export class FoliraDatabase extends Dexie {
@@ -10,6 +11,8 @@ export class FoliraDatabase extends Dexie {
   readAloudProgress!: Table<ReadAloudProgress, string>;
   voicePacks!: Table<VoicePackRecord, string>;
   annotations!: Table<AnnotationRecord, string>;
+  readingSessions!: Table<ReadingSessionRecord, string>;
+  readingGoals!: Table<ReadingGoalsRecord, string>;
 
   constructor() {
     super('FoliraDatabase');
@@ -70,6 +73,16 @@ export class FoliraDatabase extends Dexie {
       readAloudProgress: 'documentId, pageNumber, updatedAt',
       voicePacks: 'id, name, language, locale, installedAt',
       annotations: 'id, documentId, pageNumber, color, createdAt, [documentId+pageNumber]',
+    });
+
+    this.version(6).stores({
+      documents: 'id, name, format, isFavourite, lastOpenedAt, createdAt, fingerprint',
+      bookmarks: 'id, documentId, pageNumber, createdAt',
+      readAloudProgress: 'documentId, pageNumber, updatedAt',
+      voicePacks: 'id, name, language, locale, installedAt',
+      annotations: 'id, documentId, pageNumber, color, createdAt, [documentId+pageNumber]',
+      readingSessions: 'id, documentId, startTime, createdAt',
+      readingGoals: 'id, createdAt',
     });
   }
 }
