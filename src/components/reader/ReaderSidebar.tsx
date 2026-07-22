@@ -8,10 +8,16 @@ import {
   Trash2,
   BookOpen,
   ChevronRight,
+  Highlighter,
+  Download,
+  FileText,
+  FileCode,
 } from 'lucide-react';
 import { useReaderStore } from '@/stores/useReaderStore';
+import { useAnnotationStore } from '@/stores/useAnnotationStore';
 import { pdfService } from '@/services/pdfService';
 import type { TocOutlineItem } from '@/types/search';
+import type { AnnotationColor } from '@/types/document';
 import { formatFileSize, formatDate } from '@/utils/formatters';
 
 interface OutlineItemProps {
@@ -64,6 +70,7 @@ const OutlineNodeItem: React.FC<OutlineItemProps> = ({ item, onNavigate, depth =
 
 export const ReaderSidebar: React.FC = () => {
   const {
+    activeDocumentId,
     document: doc,
     isSidebarOpen,
     toggleSidebar,
@@ -77,22 +84,77 @@ export const ReaderSidebar: React.FC = () => {
     pdfDocProxy,
   } = useReaderStore();
 
+  const {
+    annotations,
+    loadAnnotations,
+    deleteAnnotation,
+    exportAsMarkdown,
+    exportAsJson,
+  } = useAnnotationStore();
+
   const [outlineItems, setOutlineItems] = useState<TocOutlineItem[]>([]);
   const [isLoadingToc, setIsLoadingToc] = useState<boolean>(false);
 
   useEffect(() => {
+    if (activeDocumentId) {
+      loadAnnotations(activeDocumentId);
+    }
+  }, [activeDocumentId, loadAnnotations]);
+
+  useEffect(() => {
     if (activeSidebarTab === 'toc' && pdfDocProxy) {
       setIsLoadingToc(true);
-      pdfService.getOutline(pdfDocProxy).then((items) => {
-        setOutlineItems(items);
-        setIsLoadingToc(false);
-      }).catch(() => {
-        setIsLoadingToc(false);
-      });
+      pdfService
+        .getOutline(pdfDocProxy)
+        .then((items) => {
+          setOutlineItems(items);
+          setIsLoadingToc(false);
+        })
+        .catch(() => {
+          setIsLoadingToc(false);
+        });
     }
   }, [activeSidebarTab, pdfDocProxy]);
 
   if (!isSidebarOpen) return null;
+
+  const handleExportMarkdown = () => {
+    if (!doc) return;
+    const content = exportAsMarkdown(doc.name);
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${doc.name.replace(/\.[^/.]+$/, '')}-notes.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportJson = () => {
+    if (!doc) return;
+    const content = exportAsJson(doc.name);
+    const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${doc.name.replace(/\.[^/.]+$/, '')}-notes.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const getColorClass = (color: AnnotationColor) => {
+    switch (color) {
+      case 'forest':
+        return 'border-l-4 border-l-[#2F6B4F] bg-[#2F6B4F]/5 dark:bg-[#3D8B67]/10';
+      case 'rose':
+        return 'border-l-4 border-l-[#C85555] bg-[#C85555]/5 dark:bg-[#C85555]/10';
+      case 'sky':
+        return 'border-l-4 border-l-[#3B82F6] bg-[#3B82F6]/5 dark:bg-[#3B82F6]/10';
+      case 'gold':
+      default:
+        return 'border-l-4 border-l-[#C89545] bg-[#C89545]/5 dark:bg-[#C89545]/10';
+    }
+  };
 
   return (
     <aside className="w-80 h-[calc(100vh-3.5rem)] bg-[var(--color-warm-card)] dark:bg-[var(--color-dark-card)] border-l border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] flex flex-col shrink-0 z-20 shadow-xl animate-in slide-in-from-right duration-200">
@@ -145,6 +207,20 @@ export const ReaderSidebar: React.FC = () => {
             }`}
           >
             <ListTree className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setActiveSidebarTab('annotations')}
+            title="Notes & Highlights"
+            className={`p-2 rounded-lg text-xs font-medium transition-colors relative ${
+              activeSidebarTab === 'annotations'
+                ? 'bg-[var(--color-emerald-light)] text-[var(--color-emerald-accent)] dark:bg-emerald-950/40 font-semibold'
+                : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
+            }`}
+          >
+            <Highlighter className="w-4 h-4" />
+            {annotations.length > 0 && (
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#C89545]" />
+            )}
           </button>
         </div>
 
@@ -317,6 +393,85 @@ export const ReaderSidebar: React.FC = () => {
                     item={item}
                     onNavigate={(page) => setCurrentPage(page)}
                   />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ANNOTATIONS & NOTES TAB */}
+        {activeSidebarTab === 'annotations' && (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between border-b border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] pb-2">
+              <h3 className="font-semibold text-sm text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
+                Notes & Highlights ({annotations.length})
+              </h3>
+
+              {annotations.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={handleExportMarkdown}
+                    className="p-1 rounded-md text-xs text-[#2F6B4F] dark:text-[#3D8B67] hover:bg-[#2F6B4F]/10 transition-colors flex items-center gap-1 font-semibold"
+                    title="Export notes as Markdown file"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    MD
+                  </button>
+                  <button
+                    onClick={handleExportJson}
+                    className="p-1 rounded-md text-xs text-[#2F6B4F] dark:text-[#3D8B67] hover:bg-[#2F6B4F]/10 transition-colors flex items-center gap-1 font-semibold"
+                    title="Export notes as JSON file"
+                  >
+                    <FileCode className="w-3.5 h-3.5" />
+                    JSON
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {annotations.length === 0 ? (
+              <p className="text-xs text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] py-4 text-center">
+                No highlights or notes created yet. Select any text inside the document to highlight or add notes.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                {annotations.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => setCurrentPage(item.pageNumber)}
+                    className={`p-3 rounded-xl border border-[#E8E5DD] dark:border-[#2D3630] ${getColorClass(
+                      item.color
+                    )} hover:shadow-sm cursor-pointer transition-all flex flex-col gap-1.5`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A857F] dark:text-[#8E9992]">
+                        Page {item.pageNumber}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteAnnotation(item.id);
+                        }}
+                        className="p-1 rounded text-gray-400 hover:text-red-600 transition-colors"
+                        title="Delete highlight"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <p className="text-xs text-[#252A27] dark:text-[#F8F5EE] italic line-clamp-3">
+                      "{item.selectedText}"
+                    </p>
+
+                    {item.note && (
+                      <div className="mt-1 p-2 rounded-lg bg-white/60 dark:bg-black/20 text-xs font-medium text-[#252A27] dark:text-[#F8F5EE]">
+                        <span className="font-semibold block text-[10px] text-[#2F6B4F] dark:text-[#3D8B67] mb-0.5">
+                          Note:
+                        </span>
+                        {item.note}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}

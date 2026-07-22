@@ -11,6 +11,7 @@ import { AudioPlayer } from '@/components/reader/AudioPlayer';
 import { MiniAudioPlayer } from '@/components/reader/MiniAudioPlayer';
 import { EpubReaderView } from '@/components/reader/EpubReaderView';
 import { EpubTypographyControls } from '@/components/reader/EpubTypographyControls';
+import { TextSelectionPopover } from '@/components/reader/TextSelectionPopover';
 import { Button } from '@/components/common/Button';
 import { ToastContainer } from '@/components/common/ToastContainer';
 import { epubParserService } from '@/services/epubParserService';
@@ -299,6 +300,7 @@ export const ReaderPage: React.FC = () => {
         ) : (
           pdfDocProxy && <PdfCanvas pdfDoc={pdfDocProxy} pageNumber={currentPage} />
         )}
+        <TextSelectionPopover />
         <ReaderSidebar />
       </div>
 

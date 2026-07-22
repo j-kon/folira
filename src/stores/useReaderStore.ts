@@ -18,7 +18,7 @@ interface ReaderState {
   zoomMode: ZoomLevelOption;
   backgroundTheme: ReaderBackgroundTheme;
   isSidebarOpen: boolean;
-  activeSidebarTab: 'info' | 'thumbnails' | 'bookmarks' | 'toc';
+  activeSidebarTab: 'info' | 'thumbnails' | 'bookmarks' | 'toc' | 'annotations';
   isFullscreen: boolean;
   bookmarks: BookmarkRecord[];
   isLoading: boolean;
