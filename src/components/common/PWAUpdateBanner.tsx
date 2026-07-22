@@ -34,13 +34,13 @@ export const PWAUpdateBanner: React.FC = () => {
   };
 
   return (
-    <div className="fixed top-20 right-5 z-50 max-w-md w-full p-4 rounded-2xl bg-[var(--color-emerald-accent)] text-white shadow-xl border border-white/20 flex items-center justify-between gap-3 animate-in slide-in-from-top-5">
+    <div className="fixed bottom-6 right-6 z-50 max-w-md w-full p-4 rounded-2xl bg-[#2F6B4F] text-[#FFFDF8] shadow-lg border border-[#DDEBE2]/20 flex items-center justify-between gap-3 animate-in slide-in-from-bottom-5">
       <div className="flex items-center gap-3">
-        <RefreshCw className="w-5 h-5 animate-spin shrink-0" />
+        <RefreshCw className="w-5 h-5 shrink-0" />
         <div>
-          <h4 className="text-sm font-bold">New Version Available</h4>
-          <p className="text-xs text-emerald-100">
-            A new version of Folira is ready. Update now to refresh your app shell.
+          <h4 className="text-sm font-semibold">A new version of Folira is ready</h4>
+          <p className="text-xs text-[#DDEBE2]">
+            Update now to reload with the latest improvements.
           </p>
         </div>
       </div>
@@ -50,7 +50,7 @@ export const PWAUpdateBanner: React.FC = () => {
           variant="secondary"
           size="sm"
           onClick={handleUpdate}
-          className="bg-white text-[var(--color-emerald-accent)] hover:bg-emerald-50"
+          className="bg-[#FFFDF8] text-[#2F6B4F] hover:bg-[#F8F5EE]"
         >
           Update Now
         </Button>
