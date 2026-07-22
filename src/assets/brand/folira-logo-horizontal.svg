@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 160" fill="none">
+  <!-- Symbol -->
+  <g transform="translate(10, 10) scale(0.2734)">
+    <rect width="512" height="512" rx="128" fill="#2F6B4F"/>
+    <path d="M148 136C148 122.745 158.745 112 172 112H240V368C240 381.255 229.255 392 216 392H172C158.745 392 148 381.255 148 368V136Z" fill="#FFFDF8"/>
+    <path d="M240 112H340C353.255 112 364 122.745 364 136V184C364 197.255 353.255 208 340 208H240V112Z" fill="#FFFDF8"/>
+    <path d="M240 240H320C331.046 240 340 248.954 340 260V296L300 276L260 296V260C260 248.954 251.046 240 240 240Z" fill="#C89545"/>
+    <path d="M364 136L316 184H364V136Z" fill="#DDEBE2" fill-opacity="0.6"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="175" y="106" font-family="Literata, Georgia, serif" font-size="88" font-weight="700" fill="#252A27" letter-spacing="-1.5">Folira</text>
+</svg>
