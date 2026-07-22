@@ -30,3 +30,16 @@ export interface DocumentUploadPayload {
   file: File;
   customName?: string;
 }
+
+export type AnnotationColor = 'gold' | 'forest' | 'rose' | 'sky';
+
+export interface AnnotationRecord {
+  id: string;
+  documentId: string;
+  pageNumber: number;
+  selectedText: string;
+  color: AnnotationColor;
+  note?: string;
+  createdAt: number;
+  updatedAt: number;
+}
