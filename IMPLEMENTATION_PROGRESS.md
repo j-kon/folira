@@ -16,7 +16,8 @@ Tracking the complete audit and hardening phase for **Folira PDF MVP**.
 - [x] **Keyboard Shortcut Isolation**: Hotkeys (`←`, `→`, `+`, `-`, `B`, `Escape`) ignored when typing in inputs/textareas.
 - [x] **PWA Update Notification**: `PWAUpdateBanner.tsx` notifies users when new app shell versions are ready.
 - [x] **Development Diagnostic Panel**: Dev-only `/diagnostic` route showing online status, SW state, DB version, stored docs count, storage usage, and PWA mode.
-- [x] **End-to-End Test Suite (Playwright)**: Full E2E tests for import/read, bookmark, delete, and offline reading flows.
+- [x] **End-to-End Test Suite (Playwright)**: Full E2E tests for import/read, bookmark, delete, offline capability, and read aloud flows.
+- [x] **Folira v0.3.0 Offline Read Aloud**: Dual speech engines (System Web Speech API with confirmed local voice filtering & Local Model ONNX/WASM engine), PDF text extraction, normalisation pipeline, sentence chunking, position saving/restoration, branded full & mini audio players, canvas sentence highlighting, and Media Session API integration.
 
 ---
 
