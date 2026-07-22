@@ -44,6 +44,24 @@ export class FoliraDatabase extends Dexie {
       readAloudProgress: 'documentId, pageNumber, updatedAt',
       voicePacks: 'id, name, language, locale, installedAt',
     });
+
+    this.version(4)
+      .stores({
+        documents: 'id, name, format, isFavourite, lastOpenedAt, createdAt, fingerprint',
+        bookmarks: 'id, documentId, pageNumber, createdAt',
+        readAloudProgress: 'documentId, pageNumber, updatedAt',
+        voicePacks: 'id, name, language, locale, installedAt',
+      })
+      .upgrade(async (tx) => {
+        return tx
+          .table('documents')
+          .toCollection()
+          .modify((doc: DocumentRecord) => {
+            if (!doc.format) {
+              doc.format = 'pdf';
+            }
+          });
+      });
   }
 }
 
