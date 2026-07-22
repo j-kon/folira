@@ -63,7 +63,7 @@ export const ReaderPage: React.FC = () => {
         (activeEl.tagName === 'INPUT' ||
           activeEl.tagName === 'TEXTAREA' ||
           activeEl.tagName === 'SELECT' ||
-          activeEl.isContentEditable);
+          (activeEl as HTMLElement).isContentEditable);
 
       if (isInput) return;
 

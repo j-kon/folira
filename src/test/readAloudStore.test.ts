@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { useReadAloudStore } from '../stores/useReadAloudStore';
 import { db } from '../services/database';
 
@@ -43,7 +43,7 @@ describe('useReadAloudStore', () => {
     await store.saveProgress();
 
     const restored = await store.restoreProgress('doc-read-test');
-    expect(retrieved => retrieved !== null);
+    expect(restored).toBeDefined();
     expect(restored?.pageNumber).toBe(3);
     expect(restored?.chunkIndex).toBe(2);
     expect(restored?.rate).toBe(1.25);

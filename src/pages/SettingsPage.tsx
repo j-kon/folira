@@ -23,7 +23,6 @@ import {
   Grid,
   List,
   Volume2,
-  ShieldCheck,
 } from 'lucide-react';
 import { useReadAloudStore } from '@/stores/useReadAloudStore';
 

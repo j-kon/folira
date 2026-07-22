@@ -50,7 +50,7 @@ export const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = ({ onExpand }) =>
         <div className="flex items-center gap-1 shrink-0">
           <IconButton
             icon={<SkipBack className="w-4 h-4" />}
-            label="Previous Sentence"
+            aria-label="Previous Sentence"
             onClick={prevSentence}
             variant="ghost"
             size="sm"
@@ -58,15 +58,15 @@ export const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = ({ onExpand }) =>
 
           <IconButton
             icon={isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            label={isPlaying ? 'Pause' : 'Play'}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
             onClick={handleTogglePlay}
-            variant="primary"
+            variant="secondary"
             size="sm"
           />
 
           <IconButton
             icon={<SkipForward className="w-4 h-4" />}
-            label="Next Sentence"
+            aria-label="Next Sentence"
             onClick={nextSentence}
             variant="ghost"
             size="sm"
@@ -74,7 +74,7 @@ export const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = ({ onExpand }) =>
 
           <IconButton
             icon={<Square className="w-3.5 h-3.5 text-red-600" />}
-            label="Stop"
+            aria-label="Stop"
             onClick={stop}
             variant="ghost"
             size="sm"
@@ -82,7 +82,7 @@ export const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = ({ onExpand }) =>
 
           <IconButton
             icon={<Maximize2 className="w-4 h-4" />}
-            label="Expand Player"
+            aria-label="Expand Player"
             onClick={onExpand}
             variant="ghost"
             size="sm"

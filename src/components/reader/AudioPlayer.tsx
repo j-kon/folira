@@ -106,14 +106,14 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ isOpen, onClose }) => 
         <div className="flex items-center justify-center gap-3 sm:gap-5 py-2">
           <IconButton
             icon={<ChevronLeft className="w-5 h-5" />}
-            label="Previous Page"
+            aria-label="Previous Page"
             onClick={prevPage}
             variant="ghost"
           />
 
           <IconButton
             icon={<SkipBack className="w-5 h-5" />}
-            label="Previous Sentence"
+            aria-label="Previous Sentence"
             onClick={prevSentence}
             variant="secondary"
           />
@@ -130,21 +130,21 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ isOpen, onClose }) => 
 
           <IconButton
             icon={<SkipForward className="w-5 h-5" />}
-            label="Next Sentence"
+            aria-label="Next Sentence"
             onClick={nextSentence}
             variant="secondary"
           />
 
           <IconButton
             icon={<ChevronRight className="w-5 h-5" />}
-            label="Next Page"
+            aria-label="Next Page"
             onClick={nextPage}
             variant="ghost"
           />
 
           <IconButton
             icon={<Square className="w-4 h-4 text-red-600" />}
-            label="Stop Playback"
+            aria-label="Stop Playback"
             onClick={stop}
             variant="ghost"
           />

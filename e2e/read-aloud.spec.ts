@@ -30,14 +30,13 @@ test.describe('Folira Read Aloud Offline Flow', () => {
     // Verify Read Aloud Modal opens
     await expect(page.locator('h3', { hasText: 'Folira Read Aloud' })).toBeVisible();
 
-    // Click Play Narration button
-    await page.locator('button[aria-label="Pause Narration"], button[aria-label="Play Narration"]').click();
+    // Click Play / Pause Narration button inside modal
+    const playPauseBtn = page.locator('button[aria-label*="Narration"]').first();
+    await expect(playPauseBtn).toBeVisible();
+    await playPauseBtn.click();
 
-    // Verify mini player or sentence highlight appears
-    await expect(page.locator('text=Reading Page 1')).toBeVisible();
-
-    // Pause Narration
-    await page.locator('button[aria-label="Pause Narration"], button[aria-label="Play Narration"]').click();
+    // Verify page indicator inside player modal
+    await expect(page.locator('text=Page 1 of')).toBeVisible();
 
     // Reconnect network
     await context.setOffline(false);

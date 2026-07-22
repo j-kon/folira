@@ -12,7 +12,7 @@ self.onmessage = async (e: MessageEvent) => {
   }
 
   if (type === 'GENERATE') {
-    const { text, voiceId, _chunkId } = payload;
+    const { text, voiceId } = payload;
 
     // Local model inference simulation / Web Audio buffer generation
     // In production, ONNX Runtime Web synthesizes PCM audio float32 array
@@ -26,14 +26,17 @@ self.onmessage = async (e: MessageEvent) => {
       pcmData[i] = Math.sin((2 * Math.PI * 440 * i) / sampleRate) * 0.1;
     }
 
-    self.postMessage({
-      type: 'GENERATE_DONE',
-      payload: {
-        text,
-        voiceId,
-        sampleRate,
-        pcmData: pcmData.buffer,
+    (self as unknown as Worker).postMessage(
+      {
+        type: 'GENERATE_DONE',
+        payload: {
+          text,
+          voiceId,
+          sampleRate,
+          pcmData: pcmData.buffer,
+        },
       },
-    }, [pcmData.buffer]);
+      [pcmData.buffer]
+    );
   }
 };

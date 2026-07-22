@@ -2,7 +2,6 @@ import type { SpeechChunk, SpeechOptions, ReaderVoice } from '@/types/readAloud'
 import { SpeechEngine } from './SpeechEngine';
 
 export class SystemSpeechEngine extends SpeechEngine {
-  private currentUtterance: SpeechSynthesisUtterance | null = null;
   private cachedVoices: ReaderVoice[] = [];
   private isInit = false;
 
@@ -68,7 +67,6 @@ export class SystemSpeechEngine extends SpeechEngine {
 
     return new Promise((resolve, reject) => {
       const utterance = new SpeechSynthesisUtterance(chunk.text);
-      this.currentUtterance = utterance;
 
       utterance.rate = options.rate;
       utterance.pitch = options.pitch;
@@ -88,13 +86,11 @@ export class SystemSpeechEngine extends SpeechEngine {
       };
 
       utterance.onend = () => {
-        this.currentUtterance = null;
         if (options.onEnd) options.onEnd();
         resolve();
       };
 
       utterance.onerror = (event) => {
-        this.currentUtterance = null;
         if (event.error === 'interrupted' || event.error === 'canceled') {
           resolve();
           return;
@@ -123,7 +119,6 @@ export class SystemSpeechEngine extends SpeechEngine {
   public stop(): void {
     if (this.isSupported()) {
       window.speechSynthesis.cancel();
-      this.currentUtterance = null;
     }
   }
 
