@@ -1,33 +1,41 @@
 import React from 'react';
-import { BookOpen, ShieldCheck, WifiOff } from 'lucide-react';
+import { ShieldCheck, WifiOff, FileText, Sparkles } from 'lucide-react';
 import { Dropzone } from '../common/Dropzone';
 import { useDocumentStore } from '@/stores/useDocumentStore';
+import { Badge } from '../common/Badge';
 
 export const WelcomeScreen: React.FC = () => {
   const { importDocument, isUploading, uploadProgressMessage } = useDocumentStore();
 
   return (
-    <div className="max-w-3xl mx-auto py-8 sm:py-16 px-4 flex flex-col items-center text-center animate-in fade-in duration-300">
-      {/* Brand Icon */}
-      <div className="w-16 h-16 rounded-3xl bg-[var(--color-emerald-accent)] text-white flex items-center justify-center shadow-lg mb-6">
-        <BookOpen className="w-9 h-9" />
+    <div className="max-w-4xl mx-auto py-8 sm:py-16 px-4 flex flex-col items-center text-center animate-in fade-in duration-300">
+      {/* Brand Icon SVG */}
+      <div className="w-20 h-20 mb-6 drop-shadow-md transition-transform hover:scale-105">
+        <img src="/favicon.svg" alt="Folira Logo" className="w-full h-full object-contain" />
       </div>
 
-      {/* Wordmark & Tagline */}
-      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
-        Folira
-      </h1>
-      <p className="mt-2 text-lg sm:text-xl font-medium text-[var(--color-emerald-accent)]">
-        Read anything. Even offline.
+      {/* Brand Wordmark & Tagline */}
+      <div className="flex flex-col items-center gap-1.5 mb-4">
+        <h1 className="font-editorial text-4xl sm:text-5xl font-bold tracking-tight text-[#252A27] dark:text-[#F8F5EE]">
+          Folira
+        </h1>
+        <Badge variant="forest" className="text-xs uppercase tracking-widest px-3 py-1 font-semibold">
+          Read anything. Even offline.
+        </Badge>
+      </div>
+
+      {/* Main Editorial Headline */}
+      <h2 className="mt-2 font-editorial text-2xl sm:text-3xl font-semibold text-[#2F6B4F] dark:text-[#3D8B67] max-w-xl">
+        Your reading space, wherever you are.
+      </h2>
+
+      {/* Product Explanation */}
+      <p className="mt-4 text-sm sm:text-base text-[#525B56] dark:text-[#C0C8C3] max-w-xl leading-relaxed">
+        Keep your PDFs organised, continue where you stopped, and read without depending on an internet connection.
       </p>
 
-      {/* Explanation */}
-      <p className="mt-4 text-sm sm:text-base text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] max-w-lg leading-relaxed">
-        Folira is your private personal reading library. Import PDFs directly from your device and read seamlessly anywhere—no internet, accounts, or cloud required.
-      </p>
-
-      {/* Upload Zone */}
-      <div className="mt-8 w-full">
+      {/* Dropzone Upload Section */}
+      <div className="mt-8 w-full max-w-2xl">
         <Dropzone
           onFileSelect={importDocument}
           isUploading={isUploading}
@@ -35,34 +43,40 @@ export const WelcomeScreen: React.FC = () => {
         />
       </div>
 
-      {/* Feature Highlights */}
-      <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full text-left">
-        <div className="p-4 rounded-2xl bg-[var(--color-warm-card)] dark:bg-[var(--color-dark-card)] border border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-[var(--color-emerald-accent)] shrink-0">
-            <WifiOff className="w-5 h-5" />
+      {/* Stylized Document Library Preview Illustration */}
+      <div className="mt-10 p-6 w-full max-w-2xl bg-[#FFFDF8] dark:bg-[#1E2420] border border-[#E8E5DD] dark:border-[#2D3630] rounded-2xl shadow-sm text-left relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none text-[#2F6B4F]">
+          <Sparkles className="w-32 h-32" />
+        </div>
+        <div className="flex items-center gap-2 text-xs font-semibold text-[#2F6B4F] dark:text-[#3D8B67] uppercase tracking-wider mb-3">
+          <FileText className="w-4 h-4" />
+          <span>Supported Formats & Storage</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-[#525B56] dark:text-[#C0C8C3]">
+          <div className="p-3 bg-[#F8F5EE] dark:bg-[#252A27] rounded-xl border border-[#E8E5DD] dark:border-[#2D3630]">
+            <span className="font-semibold text-[#252A27] dark:text-[#F8F5EE] block mb-0.5">PDF Documents</span>
+            <span>Standard PDF books, research papers, reports & guides</span>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
-              100% Offline Capable
-            </h3>
-            <p className="mt-0.5 text-xs text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)]">
-              All documents are stored locally in your browser so you can read anytime, anywhere.
-            </p>
+          <div className="p-3 bg-[#F8F5EE] dark:bg-[#252A27] rounded-xl border border-[#E8E5DD] dark:border-[#2D3630]">
+            <span className="font-semibold text-[#252A27] dark:text-[#F8F5EE] block mb-0.5">100% Device Local</span>
+            <span>Files remain on this device inside browser storage</span>
+          </div>
+          <div className="p-3 bg-[#F8F5EE] dark:bg-[#252A27] rounded-xl border border-[#E8E5DD] dark:border-[#2D3630]">
+            <span className="font-semibold text-[#252A27] dark:text-[#F8F5EE] block mb-0.5">Offline Ready</span>
+            <span>Works anytime without internet connection</span>
           </div>
         </div>
+      </div>
 
-        <div className="p-4 rounded-2xl bg-[var(--color-warm-card)] dark:bg-[var(--color-dark-card)] border border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-[var(--color-emerald-accent)] shrink-0">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
-              Private & Local
-            </h3>
-            <p className="mt-0.5 text-xs text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)]">
-              Your files never leave your device. No cloud sync, trackers, or data collection.
-            </p>
-          </div>
+      {/* Privacy & Offline Badges */}
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-[#7A857F] dark:text-[#8E9992]">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-[#2F6B4F] dark:text-[#3D8B67]" />
+          <span>Your documents remain on this device.</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <WifiOff className="w-4 h-4 text-[#2F6B4F] dark:text-[#3D8B67]" />
+          <span>Available completely offline.</span>
         </div>
       </div>
     </div>

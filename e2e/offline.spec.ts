@@ -3,11 +3,11 @@ import path from 'path';
 
 test.describe('Folira Offline Capability Flow', () => {
   test('should import PDF online and read document when network is disconnected', async ({ page, context }) => {
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('input[type="file"]', { state: 'attached' });
 
-    const fileInput = page.locator('input[type="file"]').first();
     const pdfPath = path.resolve('./e2e/fixtures/sample.pdf');
-    await fileInput.setInputFiles(pdfPath);
+    await page.setInputFiles('input[type="file"]', pdfPath);
 
     await expect(page.locator('h3', { hasText: 'sample' })).toBeVisible();
 

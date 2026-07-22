@@ -1,0 +1,21 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#FAF8F5"/>
+  <!-- Decorative background circles -->
+  <circle cx="1100" cy="100" r="300" fill="#DDEBE2" fill-opacity="0.5"/>
+  <circle cx="100" cy="550" r="250" fill="#F2E4CB" fill-opacity="0.4"/>
+  
+  <!-- Logo Symbol -->
+  <g transform="translate(100, 160) scale(0.46875)">
+    <rect width="512" height="512" rx="128" fill="#2F6B4F"/>
+    <path d="M148 136C148 122.745 158.745 112 172 112H240V368C240 381.255 229.255 392 216 392H172C158.745 392 148 381.255 148 368V136Z" fill="#FFFDF8"/>
+    <path d="M240 112H340C353.255 112 364 122.745 364 136V184C364 197.255 353.255 208 340 208H240V112Z" fill="#FFFDF8"/>
+    <path d="M240 240H320C331.046 240 340 248.954 340 260V296L300 276L260 296V260C260 248.954 251.046 240 240 240Z" fill="#C89545"/>
+    <path d="M364 136L316 184H364V136Z" fill="#DDEBE2" fill-opacity="0.6"/>
+  </g>
+  
+  <!-- Text Content -->
+  <text x="380" y="240" font-family="Literata, Georgia, serif" font-size="80" font-weight="700" fill="#252A27" letter-spacing="-2">Folira</text>
+  <text x="380" y="310" font-family="Inter, sans-serif" font-size="36" font-weight="600" fill="#2F6B4F">Read anything. Even offline.</text>
+  <text x="380" y="370" font-family="Inter, sans-serif" font-size="24" font-weight="400" fill="#6B7280">Your private personal library. Always within reach.</text>
+</svg>

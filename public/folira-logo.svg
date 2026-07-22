@@ -1,10 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
-  <rect width="512" height="512" rx="128" fill="#2E6B56"/>
-  <path d="M140 160C140 148.954 148.954 140 160 140H352C363.046 140 372 148.954 372 160V352C372 363.046 363.046 372 352 372H160C148.954 372 140 363.046 140 352V160Z" fill="white" fill-opacity="0.1"/>
-  <path d="M170 180H340V332C340 343.046 331.046 352 320 352H190C178.954 352 170 343.046 170 332V180Z" stroke="white" stroke-width="24" stroke-linejoin="round"/>
-  <path d="M256 180V352" stroke="white" stroke-width="24" stroke-linecap="round"/>
-  <path d="M200 230H226" stroke="white" stroke-width="20" stroke-linecap="round"/>
-  <path d="M200 276H226" stroke="white" stroke-width="20" stroke-linecap="round"/>
-  <path d="M286 230H312" stroke="white" stroke-width="20" stroke-linecap="round"/>
-  <path d="M286 276H312" stroke="white" stroke-width="20" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Outer Rounded Container -->
+  <rect width="512" height="512" rx="128" fill="#2F6B4F"/>
+  
+  <!-- Left Page / Doorway Frame (Forming left leg of F) -->
+  <path d="M148 136C148 122.745 158.745 112 172 112H240V368C240 381.255 229.255 392 216 392H172C158.745 392 148 381.255 148 368V136Z" fill="#FFFDF8"/>
+  
+  <!-- Top Horizontal Bar of "F" (Upper Page Leaf) -->
+  <path d="M240 112H340C353.255 112 364 122.745 364 136V184C364 197.255 353.255 208 340 208H240V112Z" fill="#FFFDF8"/>
+  
+  <!-- Middle Bar of "F" / Bookmark Accent -->
+  <path d="M240 240H320C331.046 240 340 248.954 340 260V296L300 276L260 296V260C260 248.954 251.046 240 240 240Z" fill="#C89545"/>
+  
+  <!-- Folded Page Corner Accent -->
+  <path d="M364 136L316 184H364V136Z" fill="#DDEBE2" fill-opacity="0.6"/>
 </svg>

@@ -125,8 +125,8 @@ export const DiagnosticPage: React.FC = () => {
               <span className="text-xs text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] block">
                 PWA Display Mode & Version
               </span>
-              <span className="text-sm font-semibold text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
-                {displayMode} (Folira v1.0.0)
+              <span className="text-sm font-semibold text-[#252A27] dark:text-[#F8F5EE]">
+                {displayMode} (Folira v0.2.0)
               </span>
             </div>
           </div>

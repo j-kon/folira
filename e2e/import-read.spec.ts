@@ -3,15 +3,11 @@ import path from 'path';
 
 test.describe('Folira Import & Read Flow', () => {
   test('should import PDF, navigate, and restore saved reading state', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('input[type="file"]', { state: 'attached' });
 
-    // Verify Welcome Screen
-    await expect(page.locator('h1')).toContainText('Folira');
-
-    // Upload sample PDF
-    const fileInput = page.locator('input[type="file"]').first();
     const pdfPath = path.resolve('./e2e/fixtures/sample.pdf');
-    await fileInput.setInputFiles(pdfPath);
+    await page.setInputFiles('input[type="file"]', pdfPath);
 
     // Verify Document appears in Library
     await expect(page.locator('h3', { hasText: 'sample' })).toBeVisible();

@@ -1,32 +1,34 @@
 import React, { useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Grid,
   List,
   Clock,
   Star,
   BookOpen,
-  Filter,
+  SearchX,
+  StarOff,
   ArrowUpDown,
+  BookX,
 } from 'lucide-react';
 import { useDocumentStore } from '@/stores/useDocumentStore';
 import { useUIStore } from '@/stores/useUIStore';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { WelcomeScreen } from '@/components/library/WelcomeScreen';
+import { ContinueReadingCard } from '@/components/library/ContinueReadingCard';
 import { DocumentGrid } from '@/components/library/DocumentGrid';
 import { DocumentList } from '@/components/library/DocumentList';
 import { RenameModal } from '@/components/library/RenameModal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { EmptyState } from '@/components/common/EmptyState';
 import type { SortOption } from '@/types/document';
 
 export const LibraryPage: React.FC = () => {
-  const navigate = useNavigate();
-
   const {
     documents,
     isLoading,
     loadDocuments,
     searchQuery,
+    setSearchQuery,
     filter,
     setFilter,
     sortOption,
@@ -81,10 +83,10 @@ export const LibraryPage: React.FC = () => {
     return result;
   }, [documents, searchQuery, filter, sortOption]);
 
-  // Continue reading item (the most recently opened document that has progress < 100%)
+  // Continue reading item (most recently opened document with progress > 0)
   const continueReadingDoc = useMemo(() => {
     const opened = documents
-      .filter((d) => d.lastOpenedAt !== null)
+      .filter((d) => d.lastOpenedAt !== null && d.currentPage > 0)
       .sort((a, b) => (b.lastOpenedAt || 0) - (a.lastOpenedAt || 0));
     return opened.length > 0 ? opened[0] : null;
   }, [documents]);
@@ -109,54 +111,32 @@ export const LibraryPage: React.FC = () => {
   return (
     <MainLayout>
       <div className="flex flex-col gap-8 pb-12">
-        {/* Continue Reading Featured Banner (if any) */}
+        {/* Continue Reading Section */}
         {!searchQuery && filter === 'all' && continueReadingDoc && (
-          <section className="bg-gradient-to-r from-[var(--color-emerald-accent)] to-[#1E4D3E] text-white rounded-3xl p-6 sm:p-8 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
-            <div className="relative z-10 max-w-xl">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/15 text-white backdrop-blur-xs mb-3">
-                <Clock className="w-3.5 h-3.5" />
-                <span>Continue Reading</span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight line-clamp-1">
-                {continueReadingDoc.name}
-              </h2>
-              <p className="mt-1 text-sm text-emerald-100/90 font-medium">
-                Page {continueReadingDoc.currentPage} of {continueReadingDoc.totalPages} (
-                {continueReadingDoc.progressPercentage}%)
-              </p>
-            </div>
-
-            <button
-              onClick={() => navigate(`/reader/${continueReadingDoc.id}`)}
-              className="relative z-10 px-6 py-3 rounded-xl bg-white text-[var(--color-emerald-accent)] font-semibold text-sm hover:bg-emerald-50 transition-colors shadow-sm inline-flex items-center gap-2 shrink-0"
-            >
-              <BookOpen className="w-4 h-4" />
-              <span>Resume Reading</span>
-            </button>
-          </section>
+          <ContinueReadingCard document={continueReadingDoc} />
         )}
 
         {/* Toolbar: Filter Tabs, View Toggle, Sort Selector */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E8E5DD] dark:border-[#2D3630] pb-4">
           {/* Filter Tabs */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
             <button
               onClick={() => setFilter('all')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 ${
                 filter === 'all'
-                  ? 'bg-[var(--color-emerald-accent)] text-white shadow-xs'
-                  : 'bg-[var(--color-warm-subtle)] dark:bg-[var(--color-dark-subtle)] text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] hover:text-[var(--color-charcoal)] dark:hover:text-[var(--color-dark-text)]'
+                  ? 'bg-[#2F6B4F] text-[#FFFDF8] shadow-sm'
+                  : 'bg-[#E8E5DD]/50 dark:bg-[#1E2420] text-[#525B56] dark:text-[#C0C8C3] hover:text-[#252A27] dark:hover:text-[#F8F5EE]'
               }`}
             >
-              All ({documents.length})
+              All Documents ({documents.length})
             </button>
 
             <button
               onClick={() => setFilter('favourites')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all inline-flex items-center gap-1.5 shrink-0 ${
                 filter === 'favourites'
-                  ? 'bg-[var(--color-emerald-accent)] text-white shadow-xs'
-                  : 'bg-[var(--color-warm-subtle)] dark:bg-[var(--color-dark-subtle)] text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] hover:text-[var(--color-charcoal)] dark:hover:text-[var(--color-dark-text)]'
+                  ? 'bg-[#2F6B4F] text-[#FFFDF8] shadow-sm'
+                  : 'bg-[#E8E5DD]/50 dark:bg-[#1E2420] text-[#525B56] dark:text-[#C0C8C3] hover:text-[#252A27] dark:hover:text-[#F8F5EE]'
               }`}
             >
               <Star className="w-3.5 h-3.5 fill-current" />
@@ -167,8 +147,8 @@ export const LibraryPage: React.FC = () => {
               onClick={() => setFilter('recent')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all inline-flex items-center gap-1.5 shrink-0 ${
                 filter === 'recent'
-                  ? 'bg-[var(--color-emerald-accent)] text-white shadow-xs'
-                  : 'bg-[var(--color-warm-subtle)] dark:bg-[var(--color-dark-subtle)] text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] hover:text-[var(--color-charcoal)] dark:hover:text-[var(--color-dark-text)]'
+                  ? 'bg-[#2F6B4F] text-[#FFFDF8] shadow-sm'
+                  : 'bg-[#E8E5DD]/50 dark:bg-[#1E2420] text-[#525B56] dark:text-[#C0C8C3] hover:text-[#252A27] dark:hover:text-[#F8F5EE]'
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
@@ -179,12 +159,12 @@ export const LibraryPage: React.FC = () => {
           {/* Right Controls: Sort & View Toggle */}
           <div className="flex items-center justify-between sm:justify-end gap-3">
             {/* Sort Selector */}
-            <div className="flex items-center gap-1.5 text-xs text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)]">
+            <div className="flex items-center gap-1.5 text-xs text-[#7A857F] dark:text-[#8E9992]">
               <ArrowUpDown className="w-3.5 h-3.5" />
               <select
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value as SortOption)}
-                className="bg-[var(--color-warm-card)] dark:bg-[var(--color-dark-card)] border border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] rounded-lg px-2.5 py-1 text-xs font-medium text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-emerald-accent)]"
+                className="bg-[#FFFDF8] dark:bg-[#1E2420] border border-[#E8E5DD] dark:border-[#2D3630] rounded-lg px-2.5 py-1 text-xs font-medium text-[#252A27] dark:text-[#F8F5EE] focus:outline-none focus:ring-1 focus:ring-[#2F6B4F]"
               >
                 <option value="lastOpened">Last Opened</option>
                 <option value="name">Title (A-Z)</option>
@@ -194,14 +174,14 @@ export const LibraryPage: React.FC = () => {
             </div>
 
             {/* Grid / List View Toggle */}
-            <div className="flex items-center p-1 bg-[var(--color-warm-subtle)] dark:bg-[var(--color-dark-subtle)] border border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] rounded-xl">
+            <div className="flex items-center p-1 bg-[#E8E5DD]/50 dark:bg-[#1E2420] border border-[#E8E5DD] dark:border-[#2D3630] rounded-xl">
               <button
                 onClick={() => setViewMode('grid')}
                 aria-label="Grid View"
                 className={`p-1.5 rounded-lg transition-colors ${
                   viewMode === 'grid'
-                    ? 'bg-[var(--color-warm-card)] dark:bg-[var(--color-dark-card)] text-[var(--color-emerald-accent)] shadow-xs font-bold'
-                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                    ? 'bg-[#FFFDF8] dark:bg-[#252A27] text-[#2F6B4F] dark:text-[#3D8B67] shadow-xs font-bold'
+                    : 'text-[#7A857F] hover:text-[#252A27] dark:hover:text-[#F8F5EE]'
                 }`}
               >
                 <Grid className="w-4 h-4" />
@@ -212,8 +192,8 @@ export const LibraryPage: React.FC = () => {
                 aria-label="List View"
                 className={`p-1.5 rounded-lg transition-colors ${
                   viewMode === 'list'
-                    ? 'bg-[var(--color-warm-card)] dark:bg-[var(--color-dark-card)] text-[var(--color-emerald-accent)] shadow-xs font-bold'
-                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                    ? 'bg-[#FFFDF8] dark:bg-[#252A27] text-[#2F6B4F] dark:text-[#3D8B67] shadow-xs font-bold'
+                    : 'text-[#7A857F] hover:text-[#252A27] dark:hover:text-[#F8F5EE]'
                 }`}
               >
                 <List className="w-4 h-4" />
@@ -225,24 +205,52 @@ export const LibraryPage: React.FC = () => {
         {/* Main Document Section */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold tracking-tight text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
-              {searchQuery ? `Search Results for "${searchQuery}"` : filter === 'favourites' ? 'Favourite Documents' : filter === 'recent' ? 'Recently Opened' : 'All Documents'}
+            <h2 className="font-editorial text-xl font-bold tracking-tight text-[#252A27] dark:text-[#F8F5EE]">
+              {searchQuery
+                ? `Search Results for "${searchQuery}"`
+                : filter === 'favourites'
+                ? 'Favourite Documents'
+                : filter === 'recent'
+                ? 'Recently Opened'
+                : 'All Documents'}
             </h2>
-            <span className="text-xs font-medium text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)]">
+            <span className="text-xs font-medium text-[#7A857F] dark:text-[#8E9992]">
               {filteredAndSortedDocs.length} {filteredAndSortedDocs.length === 1 ? 'document' : 'documents'}
             </span>
           </div>
 
           {filteredAndSortedDocs.length === 0 ? (
-            <div className="text-center py-16 px-4 bg-[var(--color-warm-card)] dark:bg-[var(--color-dark-card)] border border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] rounded-3xl">
-              <Filter className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-              <h3 className="text-base font-semibold text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
-                No matching documents found
-              </h3>
-              <p className="mt-1 text-sm text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)]">
-                Try clearing your search query or changing filters.
-              </p>
-            </div>
+            searchQuery ? (
+              <EmptyState
+                icon={<SearchX className="w-8 h-8" />}
+                title="No documents match your search"
+                description={`We couldn't find any documents matching "${searchQuery}". Check for typos or try searching for another title.`}
+                actionLabel="Clear Search"
+                onAction={() => setSearchQuery('')}
+              />
+            ) : filter === 'favourites' ? (
+              <EmptyState
+                icon={<StarOff className="w-8 h-8" />}
+                title="No favourite documents yet"
+                description="Click the star icon on any document card to add it to your favourites list for quick access."
+                actionLabel="View All Documents"
+                onAction={() => setFilter('all')}
+              />
+            ) : filter === 'recent' ? (
+              <EmptyState
+                icon={<BookX className="w-8 h-8" />}
+                title="No recently opened documents"
+                description="Documents you open and read will appear here automatically."
+                actionLabel="View All Documents"
+                onAction={() => setFilter('all')}
+              />
+            ) : (
+              <EmptyState
+                icon={<BookOpen className="w-8 h-8" />}
+                title="Your library is empty"
+                description="Import your first PDF document to begin reading privately on your device."
+              />
+            )
           ) : viewMode === 'grid' ? (
             <DocumentGrid documents={filteredAndSortedDocs} isLoading={isLoading} />
           ) : (

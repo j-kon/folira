@@ -1,69 +1,58 @@
 import React from 'react';
-import { clsx } from 'clsx';
 import { Loader2 } from 'lucide-react';
+import { clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'ghost' | 'destructive' | 'icon-only';
+export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
 }
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      children,
-      className,
-      variant = 'primary',
-      size = 'md',
-      isLoading = false,
-      leftIcon,
-      rightIcon,
-      disabled,
-      ...props
-    },
-    ref
-  ) => {
-    const baseStyles =
-      'inline-flex items-center justify-center font-medium transition-all duration-150 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.98]';
+export const Button: React.FC<ButtonProps> = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  isLoading = false,
+  leftIcon,
+  rightIcon,
+  className,
+  disabled,
+  ...props
+}) => {
+  const baseStyles =
+    'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6B4F] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
 
-    const variants = {
-      primary:
-        'bg-[var(--color-emerald-accent)] text-white hover:bg-[var(--color-emerald-hover)] focus-visible:ring-[var(--color-emerald-accent)] shadow-xs',
-      secondary:
-        'bg-[var(--color-warm-subtle)] text-[var(--color-charcoal)] hover:bg-[var(--color-warm-border)] dark:bg-[var(--color-dark-subtle)] dark:text-[var(--color-dark-text)] dark:hover:bg-[var(--color-dark-border)] focus-visible:ring-gray-400',
-      outline:
-        'border border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)] hover:bg-[var(--color-warm-subtle)] dark:hover:bg-[var(--color-dark-subtle)] focus-visible:ring-gray-400',
-      ghost:
-        'text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)] hover:bg-[var(--color-warm-subtle)] dark:hover:bg-[var(--color-dark-subtle)] focus-visible:ring-gray-400',
-      danger:
-        'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 shadow-xs',
-    };
+  const sizeStyles = {
+    sm: 'px-3 py-1.5 text-xs gap-1.5 min-h-[32px]',
+    md: 'px-4 py-2 text-sm gap-2 min-h-[40px]',
+    lg: 'px-5 py-2.5 text-base gap-2.5 min-h-[48px]',
+  };
 
-    const sizes = {
-      sm: 'px-3 py-1.5 text-xs gap-1.5',
-      md: 'px-4 py-2 text-sm gap-2',
-      lg: 'px-5 py-2.5 text-base gap-2.5',
-    };
+  const variantStyles = {
+    primary: 'bg-[#2F6B4F] text-[#FFFDF8] hover:bg-[#204B38] shadow-sm',
+    secondary: 'bg-[#DDEBE2] text-[#2F6B4F] hover:bg-[#c9e0d1] border border-transparent',
+    tertiary: 'bg-[#F8F5EE] text-[#252A27] border border-[#E8E5DD] hover:bg-[#E8E5DD]',
+    ghost: 'bg-transparent text-[#252A27] dark:text-[#F8F5EE] hover:bg-[#E8E5DD]/50 dark:hover:bg-[#2E3630]',
+    destructive: 'bg-[#D32F2F] text-white hover:bg-[#b71c1c] shadow-sm',
+    'icon-only': 'p-2 text-[#252A27] dark:text-[#F8F5EE] hover:bg-[#E8E5DD]/50 dark:hover:bg-[#2E3630] rounded-full',
+  };
 
-    return (
-      <button
-        ref={ref}
-        disabled={disabled || isLoading}
-        className={clsx(baseStyles, variants[variant], sizes[size], className)}
-        {...props}
-      >
-        {isLoading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          leftIcon && <span className="inline-flex shrink-0">{leftIcon}</span>
-        )}
-        <span>{children}</span>
-        {!isLoading && rightIcon && <span className="inline-flex shrink-0">{rightIcon}</span>}
-      </button>
-    );
-  }
-);
-
-Button.displayName = 'Button';
+  return (
+    <button
+      className={twMerge(clsx(baseStyles, sizeStyles[size], variantStyles[variant], className))}
+      disabled={disabled || isLoading}
+      {...props}
+    >
+      {isLoading && <Loader2 className="w-4 h-4 animate-spin shrink-0" />}
+      {!isLoading && leftIcon && <span className="shrink-0">{leftIcon}</span>}
+      {children}
+      {!isLoading && rightIcon && <span className="shrink-0">{rightIcon}</span>}
+    </button>
+  );
+};

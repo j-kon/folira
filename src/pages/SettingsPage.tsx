@@ -2,19 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/common/Button';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { ProgressBar } from '@/components/common/ProgressBar';
+import { Badge } from '@/components/common/Badge';
 import { getStorageEstimate, requestPersistentStorage, type StorageEstimateResult } from '@/utils/storageQuota';
 import { useDocumentStore } from '@/stores/useDocumentStore';
+import { useReaderStore } from '@/stores/useReaderStore';
+import { useUIStore } from '@/stores/useUIStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { documentStorage } from '@/services/documentStorage';
 import { formatFileSize } from '@/utils/formatters';
-import { Database, ShieldCheck, Download, Upload, Trash2, HardDrive } from 'lucide-react';
+import {
+  Palette,
+  HardDrive,
+  ShieldCheck,
+  Download,
+  Upload,
+  Trash2,
+  Sun,
+  Moon,
+  Grid,
+  List,
+} from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {
   const [estimate, setEstimate] = useState<StorageEstimateResult | null>(null);
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  const { documents, clearAllDocuments, loadDocuments } = useDocumentStore();
+  const { documents, clearAllDocuments, loadDocuments, viewMode, setViewMode } = useDocumentStore();
+  const { theme, toggleTheme } = useUIStore();
+  const { backgroundTheme, setBackgroundTheme } = useReaderStore();
   const { showToast } = useNotificationStore();
 
   const fetchEstimate = async () => {
@@ -31,7 +48,7 @@ export const SettingsPage: React.FC = () => {
     if (granted) {
       showToast('Persistent storage granted by browser!', 'success');
     } else {
-      showToast('Browser denied or auto-manages storage persistence.', 'info');
+      showToast('Browser auto-manages storage persistence.', 'info');
     }
     fetchEstimate();
   };
@@ -80,90 +97,160 @@ export const SettingsPage: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="max-w-4xl mx-auto py-6 sm:py-10 px-4 flex flex-col gap-8">
+      <div className="max-w-4xl mx-auto py-6 sm:py-10 px-4 flex flex-col gap-8 pb-16">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
+          <h1 className="font-editorial text-3xl font-bold tracking-tight text-[#252A27] dark:text-[#F8F5EE]">
             Settings & Storage
           </h1>
-          <p className="mt-1.5 text-sm text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)]">
-            Manage your device storage, local database backups, and browser persistence permissions.
+          <p className="mt-1.5 text-sm text-[#525B56] dark:text-[#C0C8C3]">
+            Customize your reading preferences, view local device storage, and manage backups.
           </p>
         </div>
 
-        {/* Section 1: Storage Overview */}
-        <section className="p-6 rounded-3xl bg-[var(--color-warm-card)] dark:bg-[var(--color-dark-card)] border border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] shadow-xs flex flex-col gap-4">
+        {/* Section 1: Appearance Settings */}
+        <section className="p-6 rounded-2xl bg-[#FFFDF8] dark:bg-[#1E2420] border border-[#E8E5DD] dark:border-[#2D3630] shadow-sm flex flex-col gap-6">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-[var(--color-emerald-accent)]">
+            <div className="p-2.5 rounded-xl bg-[#DDEBE2] dark:bg-[#1C382B] text-[#2F6B4F] dark:text-[#3D8B67]">
+              <Palette className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-editorial text-lg font-semibold text-[#252A27] dark:text-[#F8F5EE]">
+                Appearance & Reading Themes
+              </h2>
+              <p className="text-xs text-[#525B56] dark:text-[#C0C8C3]">
+                Customize application interface theme, reader background color, and layout mode.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+            {/* App Interface Theme */}
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold text-[#252A27] dark:text-[#F8F5EE]">Application Theme</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={theme === 'light' ? 'primary' : 'tertiary'}
+                  size="sm"
+                  leftIcon={<Sun className="w-4 h-4" />}
+                  onClick={() => {
+                    if (theme !== 'light') toggleTheme();
+                  }}
+                >
+                  Light Mode
+                </Button>
+                <Button
+                  variant={theme === 'dark' ? 'primary' : 'tertiary'}
+                  size="sm"
+                  leftIcon={<Moon className="w-4 h-4" />}
+                  onClick={() => {
+                    if (theme !== 'dark') toggleTheme();
+                  }}
+                >
+                  Dark Mode
+                </Button>
+              </div>
+            </div>
+
+            {/* Reader Theme Preference */}
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold text-[#252A27] dark:text-[#F8F5EE]">Default Reader Canvas Theme</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={backgroundTheme === 'paper' || backgroundTheme === 'light' ? 'primary' : 'tertiary'}
+                  size="sm"
+                  onClick={() => setBackgroundTheme('paper')}
+                >
+                  Paper
+                </Button>
+                <Button
+                  variant={backgroundTheme === 'sepia' ? 'primary' : 'tertiary'}
+                  size="sm"
+                  onClick={() => setBackgroundTheme('sepia')}
+                >
+                  Sepia
+                </Button>
+                <Button
+                  variant={backgroundTheme === 'night' || backgroundTheme === 'dark' ? 'primary' : 'tertiary'}
+                  size="sm"
+                  onClick={() => setBackgroundTheme('night')}
+                >
+                  Night
+                </Button>
+              </div>
+            </div>
+
+            {/* Library Layout Mode */}
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold text-[#252A27] dark:text-[#F8F5EE]">Default Library Layout</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={viewMode === 'grid' ? 'primary' : 'tertiary'}
+                  size="sm"
+                  leftIcon={<Grid className="w-4 h-4" />}
+                  onClick={() => setViewMode('grid')}
+                >
+                  Grid View
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'primary' : 'tertiary'}
+                  size="sm"
+                  leftIcon={<List className="w-4 h-4" />}
+                  onClick={() => setViewMode('list')}
+                >
+                  List View
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 2: Storage Overview & Backups */}
+        <section className="p-6 rounded-2xl bg-[#FFFDF8] dark:bg-[#1E2420] border border-[#E8E5DD] dark:border-[#2D3630] shadow-sm flex flex-col gap-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-[#DDEBE2] dark:bg-[#1C382B] text-[#2F6B4F] dark:text-[#3D8B67]">
               <HardDrive className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
-                Local Device Storage Usage
+              <h2 className="font-editorial text-lg font-semibold text-[#252A27] dark:text-[#F8F5EE]">
+                Local Device Storage & Backups
               </h2>
-              <p className="text-xs text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)]">
-                {documents.length} {documents.length === 1 ? 'document' : 'documents'} stored in browser IndexedDB.
+              <p className="text-xs text-[#525B56] dark:text-[#C0C8C3]">
+                {documents.length} {documents.length === 1 ? 'document' : 'documents'} stored on your device.
               </p>
             </div>
           </div>
 
           {estimate && estimate.isAvailable ? (
-            <div className="flex flex-col gap-2 mt-2">
-              <div className="flex justify-between items-center text-xs font-medium text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)]">
-                <span>Used: {formatFileSize(estimate.usage)}</span>
-                <span>Quota: {formatFileSize(estimate.quota)} ({estimate.usagePercentage}%)</span>
-              </div>
-              <div className="w-full h-2.5 bg-[var(--color-warm-subtle)] dark:bg-[var(--color-dark-subtle)] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-[var(--color-emerald-accent)] transition-all duration-300 rounded-full"
-                  style={{ width: `${Math.min(100, Math.max(0, estimate.usagePercentage))}%` }}
-                />
-              </div>
-            </div>
+            <ProgressBar
+              value={estimate.usagePercentage}
+              label={`Used: ${formatFileSize(estimate.usage)} of ${formatFileSize(estimate.quota)}`}
+              showPercentage
+              variant="forest"
+            />
           ) : (
-            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-              Storage estimation is unavailable in this browser environment.
+            <p className="text-xs text-[#ED6C02]">
+              Storage quota estimation is managed automatically by your browser.
             </p>
           )}
 
-          {/* Persistent Storage Request */}
-          <div className="pt-4 border-t border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between pt-4 border-t border-[#E8E5DD] dark:border-[#2D3630]">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-[var(--color-emerald-accent)]" />
-              <span className="text-xs font-medium text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
+              <ShieldCheck className="w-4 h-4 text-[#2F6B4F] dark:text-[#3D8B67]" />
+              <span className="text-xs font-medium text-[#252A27] dark:text-[#F8F5EE]">
                 Persistent Storage Status:
               </span>
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${estimate?.persistentGranted ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
+              <Badge variant={estimate?.persistentGranted ? 'success' : 'default'}>
                 {estimate?.persistentGranted ? 'Granted' : 'Standard'}
-              </span>
+              </Badge>
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRequestPersistence}
-            >
+            <Button variant="tertiary" size="sm" onClick={handleRequestPersistence}>
               Request Persistence
             </Button>
           </div>
-        </section>
 
-        {/* Section 2: Metadata Backup & Restore */}
-        <section className="p-6 rounded-3xl bg-[var(--color-warm-card)] dark:bg-[var(--color-dark-card)] border border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] shadow-xs flex flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-[var(--color-emerald-accent)]">
-              <Database className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-semibold text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
-                Backup & Restore Metadata (JSON)
-              </h2>
-              <p className="text-xs text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)]">
-                Export reading progress, bookmarks, and document metadata to JSON. Note: Metadata backups exclude original PDF file binaries.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-3 mt-2">
+          {/* Backup & Restore Metadata */}
+          <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-[#E8E5DD] dark:border-[#2D3630]">
             <Button
               variant="secondary"
               size="sm"
@@ -183,7 +270,7 @@ export const SettingsPage: React.FC = () => {
               />
               <Button
                 type="button"
-                variant="outline"
+                variant="tertiary"
                 size="sm"
                 onClick={(e) => {
                   const input = e.currentTarget.previousElementSibling as HTMLInputElement;
@@ -197,26 +284,73 @@ export const SettingsPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Section 3: Data Reset */}
-        <section className="p-6 rounded-3xl bg-red-50/50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 shadow-xs flex flex-col gap-4">
-          <div>
-            <h2 className="text-base font-semibold text-red-900 dark:text-red-300">
-              Clear Local Data
-            </h2>
-            <p className="mt-1 text-xs text-red-700 dark:text-red-400 leading-relaxed">
-              Remove all imported PDF documents, bookmarks, and saved reading progress from this browser device. This action cannot be undone.
-            </p>
+        {/* Section 3: Privacy & Security Statement */}
+        <section className="p-6 rounded-2xl bg-[#FFFDF8] dark:bg-[#1E2420] border border-[#E8E5DD] dark:border-[#2D3630] shadow-sm flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-[#DDEBE2] dark:bg-[#1C382B] text-[#2F6B4F] dark:text-[#3D8B67]">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-editorial text-lg font-semibold text-[#252A27] dark:text-[#F8F5EE]">
+                Privacy & Data Ownership
+              </h2>
+              <p className="text-xs text-[#525B56] dark:text-[#C0C8C3]">
+                Folira is engineered as a 100% private personal reading application.
+              </p>
+            </div>
           </div>
 
-          <div>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => setIsConfirmingClear(true)}
-              leftIcon={<Trash2 className="w-4 h-4" />}
-            >
-              Delete All Documents & Data
-            </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-[#525B56] dark:text-[#C0C8C3] leading-relaxed pt-2">
+            <div className="p-3.5 bg-[#F8F5EE] dark:bg-[#151A17] rounded-xl border border-[#E8E5DD] dark:border-[#2D3630]">
+              <span className="font-semibold text-[#252A27] dark:text-[#F8F5EE] block mb-1">
+                Zero Cloud Uploads
+              </span>
+              Your imported documents and reading notes never leave this device. Folira has no backend server or tracking.
+            </div>
+
+            <div className="p-3.5 bg-[#F8F5EE] dark:bg-[#151A17] rounded-xl border border-[#E8E5DD] dark:border-[#2D3630]">
+              <span className="font-semibold text-[#252A27] dark:text-[#F8F5EE] block mb-1">
+                Browser Data Protection
+              </span>
+              Clearing browser site data or cookies can remove stored files. Export JSON backups to keep metadata safe.
+            </div>
+          </div>
+        </section>
+
+        {/* Section 4: About & Danger Zone */}
+        <section className="p-6 rounded-2xl bg-[#FFFDF8] dark:bg-[#1E2420] border border-[#E8E5DD] dark:border-[#2D3630] shadow-sm flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
+                <img src="/favicon.svg" alt="Folira Logo" className="w-full h-full object-contain" />
+              </div>
+              <div>
+                <h2 className="font-editorial text-lg font-bold text-[#252A27] dark:text-[#F8F5EE]">
+                  Folira v0.2.0
+                </h2>
+                <p className="text-xs text-[#7A857F] dark:text-[#8E9992]">
+                  Read anything. Even offline.
+                </p>
+              </div>
+            </div>
+            <Badge variant="forest">PWA Standalone</Badge>
+          </div>
+
+          <div className="pt-4 border-t border-[#E8E5DD] dark:border-[#2D3630] flex flex-col gap-3">
+            <h3 className="text-xs font-semibold text-[#D32F2F]">Clear Local Library Data</h3>
+            <p className="text-xs text-[#525B56] dark:text-[#C0C8C3]">
+              Remove all imported PDF documents, bookmarks, and saved reading progress from this browser device.
+            </p>
+            <div>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setIsConfirmingClear(true)}
+                leftIcon={<Trash2 className="w-4 h-4" />}
+              >
+                Delete All Documents & Data
+              </Button>
+            </div>
           </div>
         </section>
       </div>
@@ -225,9 +359,9 @@ export const SettingsPage: React.FC = () => {
         isOpen={isConfirmingClear}
         onClose={() => setIsConfirmingClear(false)}
         onConfirm={handleClearAll}
-        title="Clear All Library Data?"
-        description="Are you completely sure? This will delete all locally stored PDF documents, thumbnails, bookmarks, and reading history from your browser."
-        confirmText="Yes, Clear Everything"
+        title="Remove All Library Data?"
+        description="Are you sure you want to delete all locally stored PDF documents, thumbnails, bookmarks, and reading history from your browser? This action cannot be undone."
+        confirmText="Yes, Remove Everything"
       />
     </MainLayout>
   );

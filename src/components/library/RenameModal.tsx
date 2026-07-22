@@ -45,7 +45,7 @@ export const RenameModal: React.FC = () => {
         </div>
 
         <div className="flex justify-end gap-2.5 mt-2">
-          <Button type="button" variant="outline" size="sm" onClick={closeRenameModal}>
+          <Button type="button" variant="tertiary" size="sm" onClick={closeRenameModal}>
             Cancel
           </Button>
           <Button type="submit" variant="primary" size="sm" disabled={!name.trim()}>

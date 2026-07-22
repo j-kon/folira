@@ -6,6 +6,7 @@ import { formatFileSize, formatDate } from '@/utils/formatters';
 import { useDocumentStore } from '@/stores/useDocumentStore';
 import { DocumentMenu } from './DocumentMenu';
 import { Button } from '../common/Button';
+import { ProgressBar } from '../common/ProgressBar';
 
 export interface DocumentCardProps {
   document: DocumentRecord;
@@ -22,10 +23,10 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document: doc }) => 
   return (
     <div
       onClick={handleOpen}
-      className="group relative bg-[var(--color-warm-card)] dark:bg-[var(--color-dark-card)] border border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] hover:border-[var(--color-emerald-accent)] dark:hover:border-[var(--color-emerald-accent)] rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 shadow-xs hover:shadow-md cursor-pointer"
+      className="group relative bg-[#FFFDF8] dark:bg-[#1E2420] border border-[#E8E5DD] dark:border-[#2D3630] hover:border-[#2F6B4F] dark:hover:border-[#3D8B67] rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
     >
       {/* Thumbnail or Fallback PDF Graphic */}
-      <div className="relative w-full aspect-[4/3] bg-[var(--color-warm-subtle)] dark:bg-[var(--color-dark-subtle)] rounded-xl overflow-hidden mb-3.5 flex items-center justify-center border border-[var(--color-warm-border)]/50 dark:border-[var(--color-dark-border)]/50">
+      <div className="relative w-full aspect-[4/3] bg-[#F8F5EE] dark:bg-[#151A17] rounded-xl overflow-hidden mb-3.5 flex items-center justify-center border border-[#E8E5DD]/60 dark:border-[#2D3630]">
         {doc.thumbnailUrl ? (
           <img
             src={doc.thumbnailUrl}
@@ -33,15 +34,15 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document: doc }) => 
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="flex flex-col items-center gap-2 text-gray-400 dark:text-gray-500 group-hover:text-[var(--color-emerald-accent)] transition-colors">
-            <FileText className="w-12 h-12 stroke-[1.5]" />
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded-md text-gray-600 dark:text-gray-300">
+          <div className="flex flex-col items-center gap-2 text-[#7A857F] dark:text-[#8E9992] group-hover:text-[#2F6B4F] transition-colors">
+            <FileText className="w-10 h-10 stroke-[1.5]" />
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#E8E5DD] dark:bg-[#2D3630] px-2 py-0.5 rounded-md text-[#525B56] dark:text-[#C0C8C3]">
               PDF
             </span>
           </div>
         )}
 
-        {/* Favourite Star Button overlay */}
+        {/* Favorite Star Overlay */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -52,7 +53,7 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document: doc }) => 
         >
           <Star
             className={`w-4 h-4 ${
-              doc.isFavourite ? 'fill-amber-400 text-amber-400' : 'text-white/80'
+              doc.isFavourite ? 'fill-[#C89545] text-[#C89545]' : 'text-white/80'
             }`}
           />
         </button>
@@ -64,7 +65,7 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document: doc }) => 
           <div className="flex items-start justify-between gap-2">
             <h3
               title={doc.name}
-              className="text-sm font-semibold text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)] line-clamp-2 leading-snug group-hover:text-[var(--color-emerald-accent)] transition-colors"
+              className="font-editorial text-base font-semibold text-[#252A27] dark:text-[#F8F5EE] line-clamp-2 leading-snug group-hover:text-[#2F6B4F] dark:group-hover:text-[#3D8B67] transition-colors"
             >
               {doc.name}
             </h3>
@@ -73,32 +74,25 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document: doc }) => 
             </div>
           </div>
 
-          <div className="mt-2 flex items-center justify-between text-xs text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)]">
+          <div className="mt-2 flex items-center justify-between text-xs text-[#7A857F] dark:text-[#8E9992]">
             <span>{formatFileSize(doc.fileSize)}</span>
             <span>{formatDate(doc.lastOpenedAt)}</span>
           </div>
         </div>
 
         {/* Reading Progress */}
-        <div className="mt-3 pt-3 border-t border-[var(--color-warm-border)]/60 dark:border-[var(--color-dark-border)]/60">
-          <div className="flex items-center justify-between text-xs font-medium text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] mb-1.5">
-            <span>
-              Pg {doc.currentPage} of {doc.totalPages}
-            </span>
-            <span>{doc.progressPercentage}%</span>
-          </div>
-
-          <div className="w-full h-1.5 bg-[var(--color-warm-subtle)] dark:bg-[var(--color-dark-subtle)] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[var(--color-emerald-accent)] transition-all duration-300 rounded-full"
-              style={{ width: `${Math.min(100, Math.max(0, doc.progressPercentage))}%` }}
-            />
-          </div>
+        <div className="mt-3 pt-3 border-t border-[#E8E5DD] dark:border-[#2D3630]">
+          <ProgressBar
+            value={doc.progressPercentage || 0}
+            label={`Page ${doc.currentPage} of ${doc.totalPages}`}
+            showPercentage
+            variant="forest"
+          />
 
           <Button
             variant="secondary"
             size="sm"
-            className="w-full mt-3 group-hover:bg-[var(--color-emerald-accent)] group-hover:text-white transition-colors"
+            className="w-full mt-3 group-hover:bg-[#2F6B4F] group-hover:text-white transition-colors"
             leftIcon={<BookOpen className="w-3.5 h-3.5" />}
           >
             {doc.currentPage > 1 ? 'Continue Reading' : 'Start Reading'}

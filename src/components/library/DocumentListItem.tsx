@@ -22,11 +22,11 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({ document: do
   return (
     <div
       onClick={handleOpen}
-      className="group relative bg-[var(--color-warm-card)] dark:bg-[var(--color-dark-card)] border border-[var(--color-warm-border)] dark:border-[var(--color-dark-border)] hover:border-[var(--color-emerald-accent)] dark:hover:border-[var(--color-emerald-accent)] rounded-xl p-3.5 flex items-center justify-between gap-4 transition-all duration-200 shadow-xs cursor-pointer"
+      className="group relative bg-[#FFFDF8] dark:bg-[#1E2420] border border-[#E8E5DD] dark:border-[#2D3630] hover:border-[#2F6B4F] dark:hover:border-[#3D8B67] rounded-xl p-3.5 flex items-center justify-between gap-4 transition-all duration-200 shadow-sm cursor-pointer"
     >
       {/* Icon & File info */}
       <div className="flex items-center gap-3.5 min-w-0 flex-1">
-        <div className="w-10 h-12 rounded-lg bg-[var(--color-warm-subtle)] dark:bg-[var(--color-dark-subtle)] flex items-center justify-center text-[var(--color-emerald-accent)] shrink-0 border border-[var(--color-warm-border)]/50 dark:border-[var(--color-dark-border)]/50 overflow-hidden">
+        <div className="w-10 h-12 rounded-lg bg-[#F8F5EE] dark:bg-[#151A17] flex items-center justify-center text-[#2F6B4F] dark:text-[#3D8B67] shrink-0 border border-[#E8E5DD] dark:border-[#2D3630] overflow-hidden">
           {doc.thumbnailUrl ? (
             <img src={doc.thumbnailUrl} alt={doc.name} className="w-full h-full object-cover" />
           ) : (
@@ -38,16 +38,16 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({ document: do
           <div className="flex items-center gap-2">
             <h3
               title={doc.name}
-              className="text-sm font-semibold text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)] truncate group-hover:text-[var(--color-emerald-accent)] transition-colors"
+              className="font-editorial text-sm font-semibold text-[#252A27] dark:text-[#F8F5EE] truncate group-hover:text-[#2F6B4F] dark:group-hover:text-[#3D8B67] transition-colors"
             >
               {doc.name}
             </h3>
             {doc.isFavourite && (
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
+              <Star className="w-3.5 h-3.5 fill-[#C89545] text-[#C89545] shrink-0" />
             )}
           </div>
 
-          <div className="mt-1 flex items-center gap-3 text-xs text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)]">
+          <div className="mt-1 flex items-center gap-3 text-xs text-[#7A857F] dark:text-[#8E9992]">
             <span>{formatFileSize(doc.fileSize)}</span>
             <span>•</span>
             <span>Pg {doc.currentPage} of {doc.totalPages} ({doc.progressPercentage}%)</span>
@@ -62,11 +62,11 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({ document: do
         <button
           onClick={() => toggleFavourite(doc.id)}
           aria-label={doc.isFavourite ? 'Unmark favourite' : 'Mark favourite'}
-          className="p-1.5 rounded-lg text-gray-400 hover:text-amber-400 transition-colors"
+          className="p-1.5 rounded-lg text-[#7A857F] hover:text-[#C89545] transition-colors"
         >
           <Star
             className={`w-4 h-4 ${
-              doc.isFavourite ? 'fill-amber-400 text-amber-400' : 'text-gray-400'
+              doc.isFavourite ? 'fill-[#C89545] text-[#C89545]' : 'text-[#7A857F]'
             }`}
           />
         </button>

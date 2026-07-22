@@ -36,7 +36,7 @@ export const DuplicateModal: React.FC<DuplicateModalProps> = ({
         </p>
 
         <div className="flex flex-col sm:flex-row justify-end gap-2.5 mt-2">
-          <Button variant="outline" size="sm" onClick={onClose} leftIcon={<XCircle className="w-4 h-4" />}>
+          <Button variant="tertiary" size="sm" onClick={onClose} leftIcon={<XCircle className="w-4 h-4" />}>
             Cancel Import
           </Button>
           <Button
