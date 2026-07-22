@@ -56,7 +56,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
       onClick={() => fileInputRef.current?.click()}
       tabIndex={0}
       role="button"
-      aria-label="Import PDF document dropzone"
+      aria-label="Import PDF or EPUB document dropzone"
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -72,7 +72,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
       <input
         ref={fileInputRef}
         type="file"
-        accept="application/pdf,.pdf"
+        accept="application/pdf,.pdf,application/epub+zip,.epub"
         className="hidden"
         onChange={handleFileChange}
         disabled={isUploading}
@@ -87,11 +87,11 @@ export const Dropzone: React.FC<DropzoneProps> = ({
       </div>
 
       <h3 className="text-lg font-semibold text-[var(--color-charcoal)] dark:text-[var(--color-dark-text)]">
-        {isUploading ? 'Importing document...' : 'Import your PDF document'}
+        {isUploading ? 'Importing document...' : 'Import your PDF or EPUB book'}
       </h3>
 
       <p className="mt-1.5 text-sm text-[var(--color-charcoal-muted)] dark:text-[var(--color-dark-muted)] max-w-sm leading-relaxed">
-        {progressMessage || 'Drag and drop your PDF here, or click to browse your device files.'}
+        {progressMessage || 'Drag and drop your PDF or EPUB here, or click to browse your device files.'}
       </p>
 
       {!isUploading && (
@@ -105,7 +105,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
               fileInputRef.current?.click();
             }}
           >
-            Select PDF File
+            Select Document File
           </Button>
         </div>
       )}

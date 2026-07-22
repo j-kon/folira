@@ -70,7 +70,7 @@ export const Header: React.FC = () => {
           <input
             ref={fileInputRef}
             type="file"
-            accept="application/pdf,.pdf"
+            accept="application/pdf,.pdf,application/epub+zip,.epub"
             className="hidden"
             onChange={handleFileChange}
           />
