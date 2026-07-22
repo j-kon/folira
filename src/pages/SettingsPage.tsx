@@ -22,7 +22,10 @@ import {
   Moon,
   Grid,
   List,
+  Volume2,
+  ShieldCheck,
 } from 'lucide-react';
+import { useReadAloudStore } from '@/stores/useReadAloudStore';
 
 export const SettingsPage: React.FC = () => {
   const [estimate, setEstimate] = useState<StorageEstimateResult | null>(null);
@@ -200,6 +203,74 @@ export const SettingsPage: React.FC = () => {
                   List View
                 </Button>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 2: Read Aloud & Voice Preferences */}
+        <section className="p-6 rounded-2xl bg-[#FFFDF8] dark:bg-[#1E2420] border border-[#E8E5DD] dark:border-[#2D3630] shadow-sm flex flex-col gap-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-[#DDEBE2] dark:bg-[#1C382B] text-[#2F6B4F] dark:text-[#3D8B67]">
+              <Volume2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-editorial text-lg font-semibold text-[#252A27] dark:text-[#F8F5EE]">
+                Read Aloud & Voice Preferences
+              </h2>
+              <p className="text-xs text-[#525B56] dark:text-[#C0C8C3]">
+                Manage offline speech engines, default reading speed, pitch, and voice packs.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+            {/* Preferred Voice */}
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold text-[#252A27] dark:text-[#F8F5EE]">Default Speech Voice</span>
+              <select
+                value={useReadAloudStore.getState().selectedVoiceId || ''}
+                onChange={(e) => useReadAloudStore.getState().setSelectedVoice(e.target.value)}
+                className="w-full text-xs p-2.5 rounded-xl bg-[#FAF8F5] dark:bg-[#151A17] border border-[#E8E5DD] dark:border-[#2D3630] text-[#252A27] dark:text-[#F8F5EE] focus:outline-none focus:ring-2 focus:ring-[#2F6B4F]"
+              >
+                {useReadAloudStore.getState().availableVoices.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name} ({v.lang}){v.isLocal ? ' • Offline Local Voice' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Default Speed Rate */}
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold text-[#252A27] dark:text-[#F8F5EE]">
+                Default Reading Speed ({useReadAloudStore.getState().rate}x)
+              </span>
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                {[0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0].map((s) => (
+                  <Button
+                    key={s}
+                    variant={useReadAloudStore.getState().rate === s ? 'primary' : 'tertiary'}
+                    size="sm"
+                    onClick={() => useReadAloudStore.getState().setRate(s)}
+                  >
+                    {s}x
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Offline Voice Pack Status */}
+            <div className="flex flex-col gap-2 sm:col-span-2 p-4 rounded-xl bg-[#FAF8F5] dark:bg-[#151A17] border border-[#E8E5DD] dark:border-[#2D3630]">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#252A27] dark:text-[#F8F5EE] flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-[#2F6B4F] dark:text-[#3D8B67]" />
+                  Folira Offline Voice Packs
+                </span>
+                <Badge variant="forest">Engine 1 Active (Web Speech)</Badge>
+              </div>
+              <p className="text-xs text-[#525B56] dark:text-[#C0C8C3] leading-relaxed mt-1">
+                Folira uses confirmed local device voices (`voice.localService === true`) for instant 100% offline speech synthesis. Additional neural ONNX local voice models can be installed when experimental features are enabled.
+              </p>
             </div>
           </div>
         </section>
