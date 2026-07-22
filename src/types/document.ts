@@ -1,3 +1,5 @@
+import type { EpubMetadata } from './epub';
+
 export interface DocumentRecord {
   id: string;
   name: string;
@@ -14,6 +16,10 @@ export interface DocumentRecord {
   lastOpenedAt: number | null;
   fingerprint: string;
   thumbnailUrl?: string;
+  format: 'pdf' | 'epub';
+  epubMetadata?: EpubMetadata;
+  chapterIndex?: number;
+  chapterHref?: string;
 }
 
 export type DocumentFilter = 'all' | 'favourites' | 'recent';
