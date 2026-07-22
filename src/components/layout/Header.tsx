@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Settings } from 'lucide-react';
+import { Plus, Settings, BarChart3 } from 'lucide-react';
 import { useDocumentStore } from '@/stores/useDocumentStore';
 import { ThemeToggle } from './ThemeToggle';
 import { OfflineBadge } from '../common/OfflineBadge';
@@ -84,6 +84,15 @@ export const Header: React.FC = () => {
           >
             <span className="hidden sm:inline">Import</span> Document
           </Button>
+
+          <Link to="/analytics" tabIndex={-1}>
+            <IconButton
+              aria-label="Reading Analytics and Goals"
+              icon={<BarChart3 className="w-5 h-5" />}
+              variant="ghost"
+              size="sm"
+            />
+          </Link>
 
           <Link to="/settings" tabIndex={-1}>
             <IconButton
