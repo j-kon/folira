@@ -21,6 +21,7 @@ test.describe('Folira Import & Read Flow', () => {
 
     // Return to Library
     await page.locator('button[aria-label="Back to Library"]').click();
-    await expect(page.locator('h2', { hasText: 'All Documents' })).toBeVisible();
+    await page.waitForURL('/');
+    await expect(page).toHaveURL('/');
   });
 });

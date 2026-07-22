@@ -221,7 +221,7 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
   closeReaderSession: () => {
     const { pdfDocProxy } = get();
     if (pdfDocProxy) {
-      pdfDocProxy.destroy();
+      (pdfDocProxy as any).destroy();
     }
     set({
       activeDocumentId: null,

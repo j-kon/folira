@@ -29,6 +29,7 @@ describe('documentStorage Service', () => {
       updatedAt: 1000,
       lastOpenedAt: null,
       fingerprint,
+      format: 'pdf',
     };
 
     await documentStorage.saveDocument(doc);
@@ -58,6 +59,7 @@ describe('documentStorage Service', () => {
       updatedAt: 1000,
       lastOpenedAt: 2000,
       fingerprint: 'fp-123',
+      format: 'pdf',
     };
 
     await documentStorage.saveDocument(doc);
