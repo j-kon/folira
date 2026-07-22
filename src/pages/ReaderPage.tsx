@@ -9,9 +9,14 @@ import { ReaderSidebar } from '@/components/reader/ReaderSidebar';
 import { SpokenTextHighlight } from '@/components/reader/SpokenTextHighlight';
 import { AudioPlayer } from '@/components/reader/AudioPlayer';
 import { MiniAudioPlayer } from '@/components/reader/MiniAudioPlayer';
+import { EpubReaderView } from '@/components/reader/EpubReaderView';
+import { EpubTypographyControls } from '@/components/reader/EpubTypographyControls';
 import { Button } from '@/components/common/Button';
 import { ToastContainer } from '@/components/common/ToastContainer';
-import { Loader2, AlertCircle, ArrowLeft, ChevronLeft, ChevronRight, Bookmark, Sun, Moon, Volume2 } from 'lucide-react';
+import { epubParserService } from '@/services/epubParserService';
+import type { ParsedEpubPackage, EpubTypographySettings } from '@/types/epub';
+import type JSZip from 'jszip';
+import { Loader2, AlertCircle, ArrowLeft, ChevronLeft, ChevronRight, Bookmark, Sun, Moon, Volume2, Type } from 'lucide-react';
 
 export const ReaderPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +32,7 @@ export const ReaderPage: React.FC = () => {
     totalPages,
     prevPage,
     nextPage,
+    setCurrentPage,
     addBookmarkForCurrentPage,
     backgroundTheme,
     setBackgroundTheme,
@@ -36,7 +42,6 @@ export const ReaderPage: React.FC = () => {
   const {
     status: readAloudStatus,
     startListening,
-    play,
     pause,
     resume,
     stop,
@@ -50,11 +55,20 @@ export const ReaderPage: React.FC = () => {
 
   const [isToolbarVisible, setIsToolbarVisible] = useState(true);
   const [isAudioPlayerOpen, setIsAudioPlayerOpen] = useState(false);
+  const [isTypographyOpen, setIsTypographyOpen] = useState(false);
+  const [epubData, setEpubData] = useState<{ zip: JSZip; packageData: ParsedEpubPackage } | null>(null);
+  const [typography, setTypography] = useState<EpubTypographySettings>({
+    fontSize: 18,
+    fontFamily: 'serif',
+    lineHeight: 1.6,
+    marginPadding: 24,
+  });
+
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useKeyboardShortcuts(true);
 
-  // Read Aloud Keyboard Shortcuts
+  // Read Aloud & Typography Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeEl = document.activeElement;
@@ -118,7 +132,7 @@ export const ReaderPage: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [readAloudStatus, rate, volume, id, currentPage, play, pause, resume, stop, nextSentence, prevSentence, setRate, setVolume, startListening]);
+  }, [readAloudStatus, rate, volume, id, currentPage, pause, resume, stop, prevSentence, nextSentence, setRate, setVolume, startListening]);
 
   // Media Session API Integration
   useEffect(() => {
@@ -169,6 +183,17 @@ export const ReaderPage: React.FC = () => {
     };
   }, [id, loadReaderSession, closeReaderSession]);
 
+  // Load EPUB package if document format is 'epub'
+  useEffect(() => {
+    if (docRecord && docRecord.format === 'epub' && docRecord.fileBlob) {
+      epubParserService.parseEpub(docRecord.fileBlob).then((res) => {
+        setEpubData({ zip: res.zip, packageData: res.packageData });
+      }).catch((err) => {
+        console.error('Error parsing EPUB file in reader:', err);
+      });
+    }
+  }, [docRecord]);
+
   const handleOpenListen = async () => {
     if (id && (readAloudStatus === 'idle' || readAloudStatus === 'stopped')) {
       await startListening(id, currentPage);
@@ -202,7 +227,10 @@ export const ReaderPage: React.FC = () => {
     );
   }
 
-  if (error || !pdfDocProxy) {
+  const isEpub = docRecord?.format === 'epub';
+  const isReaderReady = isEpub ? !!epubData : !!pdfDocProxy;
+
+  if (error || !isReaderReady) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAF8F5] dark:bg-[#151A17] text-[#252A27] dark:text-[#F8F5EE] p-4">
         <div className="max-w-md w-full p-8 rounded-3xl bg-[#FFFDF8] dark:bg-[#1E2420] border border-[#E8E5DD] dark:border-[#2D3630] shadow-xl text-center flex flex-col items-center gap-4">
@@ -214,7 +242,7 @@ export const ReaderPage: React.FC = () => {
               Unable to Open Document
             </h2>
             <p className="mt-2 text-sm text-[#525B56] dark:text-[#C0C8C3] leading-relaxed">
-              {error || 'The requested PDF file could not be loaded from local device storage.'}
+              {error || 'The requested file could not be loaded from local device storage.'}
             </p>
           </div>
           <Button
@@ -236,12 +264,41 @@ export const ReaderPage: React.FC = () => {
       {/* Desktop & Mobile Reader Toolbar */}
       <ReaderToolbar isVisible={isToolbarVisible} onOpenListen={handleOpenListen} />
 
+      {/* EPUB Typography Toggle Button (Floating Top Right) */}
+      {isEpub && (
+        <div className="absolute top-16 right-4 z-40">
+          <button
+            onClick={() => setIsTypographyOpen((prev) => !prev)}
+            className="p-2.5 rounded-xl bg-[#FFFDF8] dark:bg-[#1E2420] border border-[#E8E5DD] dark:border-[#2D3630] text-[#252A27] dark:text-[#F8F5EE] shadow-md hover:bg-[#E8E5DD]/50"
+            title="Ebook Typography & Font Settings"
+          >
+            <Type className="w-5 h-5 text-[#2F6B4F] dark:text-[#3D8B67]" />
+          </button>
+          {isTypographyOpen && (
+            <div className="absolute right-0 mt-2">
+              <EpubTypographyControls settings={typography} onChange={setTypography} />
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Spoken Text Highlight Banner */}
       <SpokenTextHighlight />
 
-      {/* Main Canvas & Sidebar Container */}
+      {/* Main Canvas / EPUB View & Sidebar Container */}
       <div className="flex-1 flex overflow-hidden relative" onClick={() => setIsToolbarVisible((prev) => !prev)}>
-        <PdfCanvas pdfDoc={pdfDocProxy} pageNumber={currentPage} />
+        {isEpub && epubData ? (
+          <EpubReaderView
+            zip={epubData.zip}
+            packageData={epubData.packageData}
+            currentChapterIndex={currentPage - 1}
+            onChapterChange={(idx) => setCurrentPage(idx + 1)}
+            typography={typography}
+            backgroundTheme={backgroundTheme}
+          />
+        ) : (
+          pdfDocProxy && <PdfCanvas pdfDoc={pdfDocProxy} pageNumber={currentPage} />
+        )}
         <ReaderSidebar />
       </div>
 
