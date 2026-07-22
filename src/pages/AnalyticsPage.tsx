@@ -9,7 +9,6 @@ import {
   BarChart3,
   Target,
   Edit3,
-  TrendingUp,
   FileText,
   BookMarked,
   Loader2,

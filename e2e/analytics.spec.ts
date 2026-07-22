@@ -9,7 +9,7 @@ test.describe('Folira Reading Analytics & Goals Flow', () => {
 
     // Verify Metric Cards
     await expect(page.locator('text=Total Time Read')).toBeVisible();
-    await expect(page.locator('text=Daily Streak')).toBeVisible();
+    await expect(page.getByText('Daily Streak', { exact: true })).toBeVisible();
 
     // Open Edit Goals Modal
     await page.locator('button', { hasText: 'Edit Goals' }).click();
