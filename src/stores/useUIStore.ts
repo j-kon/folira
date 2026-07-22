@@ -15,6 +15,16 @@ interface UIState {
   closeDeleteConfirm: () => void;
 }
 
+const applyThemeToDocument = (theme: AppTheme) => {
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+};
+
 export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
@@ -22,21 +32,13 @@ export const useUIStore = create<UIState>()(
       renameModalDocId: null,
       deleteConfirmDocId: null,
       setTheme: (theme) => {
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
+        applyThemeToDocument(theme);
         set({ theme });
       },
       toggleTheme: () => {
         set((state) => {
           const nextTheme = state.theme === 'light' ? 'dark' : 'light';
-          if (nextTheme === 'dark') {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
+          applyThemeToDocument(nextTheme);
           return { theme: nextTheme };
         });
       },
@@ -48,6 +50,11 @@ export const useUIStore = create<UIState>()(
     {
       name: 'folira-ui-settings',
       partialize: (state) => ({ theme: state.theme }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          applyThemeToDocument(state.theme);
+        }
+      },
     }
   )
 );

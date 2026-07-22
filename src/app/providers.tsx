@@ -9,11 +9,13 @@ export const Providers: React.FC<ProvidersProps> = ({ children }) => {
   const { theme } = useUIStore();
 
   useEffect(() => {
-    // Initialize root HTML dark class based on persisted user preference
+    // Synchronize root HTML dark class & data-theme attribute based on persisted user preference
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
     }
   }, [theme]);
 

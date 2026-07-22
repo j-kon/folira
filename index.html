@@ -21,6 +21,30 @@
     <meta name="twitter:image" content="/og-image.png" />
 
     <title>Folira — Read anything. Even offline.</title>
+
+    <script>
+      (function() {
+        try {
+          var stored = localStorage.getItem('folira-ui-settings');
+          var isDark = false;
+          if (stored) {
+            var parsed = JSON.parse(stored);
+            if (parsed && parsed.state && parsed.state.theme === 'dark') {
+              isDark = true;
+            }
+          } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            isDark = true;
+          }
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

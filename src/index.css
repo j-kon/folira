@@ -5,7 +5,7 @@
 @import "./styles/themes.css";
 @import "./styles/utilities.css";
 
-@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+@custom-variant dark (&:where(.dark, .dark *, [data-theme='dark'], [data-theme='dark'] *));
 
 @theme {
   --color-folira-forest: #2F6B4F;
